@@ -42,5 +42,8 @@ egui = "0.29.1"
 toml = "0.8.19"
 serde = {version = "1.0.215", features = ["derive"]}
 
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
+
 [features]
 package = []

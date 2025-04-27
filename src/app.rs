@@ -1,4 +1,4 @@
-use cirrus_theming::v1::{Colour, Theme};
+use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, Rect, RichText, Slider, Stroke, Vec2};
 use egui_notify::ToastLevel;
 use std::time::Duration;
@@ -33,8 +33,7 @@ impl<'a> Aeternum<'a> {
                 Stroke {
                     width: 2.0,
                     color: Color32::from_hex(
-                        &self.theme.accent_colour.as_ref()
-                            .unwrap_or(&Colour {hex_code: "e05f78".into()}).hex_code
+                        &self.theme.accent_colour.hex_code
                     ).unwrap()
                 },
                 10.0,
@@ -87,8 +86,8 @@ impl eframe::App for Aeternum<'_> {
                     egui::Frame::default()
                         .outer_margin(
                             Margin::symmetric(
-                                (window_rect.width() / 2.0) - image_width / 2.0,
-                                (window_rect.height() / 2.0) - image_width / 2.0
+                                ((window_rect.width() / 2.0) - image_width / 2.0) as i8,
+                                ((window_rect.height() / 2.0) - image_width / 2.0) as i8
                             )
                         )
                         .show(ui, |ui| {
@@ -270,8 +269,8 @@ impl eframe::App for Aeternum<'_> {
         egui::TopBottomPanel::top("menu_bar")
             .show_separator_line(false)
             .frame(
-                Frame::none()
-                    .outer_margin(Margin {right: 10.0, top: 7.0, ..Default::default()})
+                Frame::NONE
+                    .outer_margin(Margin {right: 10, top: 7, ..Default::default()})
             )
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
@@ -294,8 +293,8 @@ impl eframe::App for Aeternum<'_> {
         egui::TopBottomPanel::bottom("status_bar")
             .show_separator_line(false)
             .frame(
-                Frame::none()
-                    .outer_margin(Margin {right: 12.0, bottom: 8.0, ..Default::default()})
+                Frame::NONE
+                    .outer_margin(Margin {right: 12, bottom: 8, ..Default::default()})
             ).show(ctx, |ui| {
                 if let Ok(loading_status) = self.notifier.loading_status.try_read() {
                     if let Some(loading) = loading_status.as_ref() {
@@ -306,7 +305,11 @@ impl eframe::App for Aeternum<'_> {
 
                             ui.add(
                                 egui::Spinner::new()
-                                    .color(Color32::from_hex("#e05f78").unwrap()) // NOTE: This should be the default accent colour.
+                                    .color(
+                                        Color32::from_hex(
+                                            &self.theme.accent_colour.hex_code
+                                        ).unwrap()
+                                    )
                                     .size(20.0)
                             );
                         });

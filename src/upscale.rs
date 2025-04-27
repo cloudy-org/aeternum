@@ -1,8 +1,19 @@
 use std::{io::{BufRead, BufReader}, path::PathBuf, process::Stdio, sync::{Arc, Mutex}, thread, time::{Duration, Instant}};
 use egui_notify::ToastLevel;
 use std::process::Command;
+use strum_macros::{EnumIter, Display};
 
 use crate::{error::Error, image::Image, notifier::NotifierAPI};
+
+#[derive(Clone, PartialEq, EnumIter, Display)]
+pub enum OutputExt {
+    #[strum(to_string = "WebP")]
+    WebP,
+    #[strum(to_string = "PNG")]
+    PNG,
+    #[strum(to_string = "JPG")]
+    JPG
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Model {
@@ -17,6 +28,7 @@ pub struct UpscaleOptions {
     pub scale: i32,
     pub compression: i32,
     pub model: Option<Model>,
+    pub output_ext: OutputExt,
     pub output: Option<PathBuf>
 }
 
@@ -36,6 +48,7 @@ impl Default for UpscaleOptions {
             scale: 4,
             compression: 0,
             model: None,
+            output_ext: OutputExt::PNG,
             output: None
         }
     }
@@ -50,7 +63,12 @@ impl Upscale {
             Ok(path) => path,
             Err(error) => return Err(Error::FailedToGetCurrentExecutablePath(Some(error.to_string())))
         };
-        let tool_path = executable_path.with_file_name("upscayl-bin");
+        
+        let tool_path = if cfg!(unix) {
+            executable_path.with_file_name("upscayl-bin")
+        } else {
+            executable_path.with_file_name("upscayl-bin.exe")
+        };
 
         if !tool_path.exists() {
             return Err(Error::UpscaylNotInPath(Some("upscayl-bin is not with the aeternum executable.".to_string())))
@@ -95,26 +113,19 @@ impl Upscale {
                     upscaling_arc: Arc::new(false.into())
                 })
             },
-            Err(err) => {
-                let err_mesage = err.to_string();
-
-                Err(Error::UpscaylNotInPath(Some(err_mesage)))
-            }
+            Err(err) => Err(Error::UpscaylNotInPath(Some(err.to_string())))
         }
     }
 
-    pub fn init(&mut self, custom_path: Option<String>) -> Result<(), Error> {
-        match custom_path {
-            Some(path) => {
-                let path = PathBuf::from(path);
+    pub fn init(&mut self, enabled: bool) -> Result<(), Error> {
+        if enabled {
+            let path: PathBuf = dirs::config_local_dir().unwrap().join("cloudy").join("aeternum").join("models");
 
-                if path.exists() {
-                    self.get_models(path);
-                } else {
-                    return Err(Error::NoModels(Some("Custom folder doesn't exist.".to_string()), path))
-                }
-            },
-            None => {}
+            if path.exists() {
+                self.get_models(path);
+            } else {
+                return Err(Error::NoModels(Some("Custom folder doesn't exist.".to_string()), path))
+            }
         }
 
         self.get_models(self.models_folder.clone());
@@ -146,21 +157,14 @@ impl Upscale {
 
         let path = &image.path;
 
-        let out = match &self.options.output {
+        let output_folder = match &self.options.output {
             Some(path) => path.clone(),
-            None => image.create_output(
-                &self.options.scale,
-                self.options.model.as_ref().unwrap()
-            ),
+            None => image.path.parent().unwrap().to_path_buf()
         };
 
-        if out.exists() {
-            notifier.toasts.lock().unwrap()
-                .toast_and_log("Image already exists!".into(), ToastLevel::Info)
-                .duration(Some(Duration::from_secs(10)));
-
-            return;
-        }
+        let out = output_folder.join(
+            image.create_output(&self.options)
+        );
 
         let path = path.clone();
         let cli_path = self.cli_path.clone();
@@ -177,6 +181,12 @@ impl Upscale {
             notifier_arc.set_loading(Some("Initializing command...".into()));
 
             let mut upscale_command = Command::new(cli_path.to_string_lossy().to_string());
+
+            #[cfg(target_os = "windows")] {
+                use std::os::windows::process::CommandExt;
+
+                upscale_command.creation_flags(0x08000000);
+            }
 
             let model = &options.model.unwrap();
 
@@ -274,6 +284,10 @@ impl Upscale {
         for entry in glob::glob(&gl).unwrap() {
             match entry {
                 Ok(entry_path) => {
+                    if format!("{}", entry_path.display()).contains("video") {
+                        continue;
+                    }
+
                     let param_file = entry_path.with_file_name(
                         format!("{}.param", entry_path.file_stem().unwrap().to_string_lossy())
                     );

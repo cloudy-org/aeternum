@@ -1,0 +1,106 @@
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - v[0-9]+.*
+
+jobs:
+  build-zip:
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      - id: os_lower
+        uses: ASzc/change-string-case-action@v6
+        with:
+          string: upscayl-bin-20240601-103425-${{ runner.os }}
+
+      - uses: robinraju/release-downloader@v1
+        name: download upscayl
+        with:
+          repository: 'upscayl/upscayl-ncnn'
+          tag: '20240601-103425'
+          fileName: '${{ steps.os_lower.outputs.lowercase }}.zip'
+
+      - name: unzip upscayl
+        run: 7z x ${{ steps.os_lower.outputs.lowercase }}.zip
+
+      - if: runner.os == 'Windows'
+        uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: aeternum
+          target: ${{ matrix.target }}
+          include: ./assets/models,LICENSE,./${{ steps.os_lower.outputs.lowercase }}/upscayl-bin.exe
+          tar: unix
+          zip: windows
+          features: 'package'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - if: runner.os != 'Windows'
+        uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: aeternum
+          target: ${{ matrix.target }}
+          include: ./assets/models,LICENSE,./${{ steps.os_lower.outputs.lowercase }}/upscayl-bin
+          tar: unix
+          zip: windows
+          features: 'package'
+          token: ${{ secrets.GITHUB_TOKEN }}
+  
+  inno-installer:
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      - id: os_lower
+        uses: ASzc/change-string-case-action@v6
+        with:
+          string: upscayl-bin-20240601-103425-${{ runner.os }}
+
+      - uses: robinraju/release-downloader@v1
+        name: download upscayl
+        with:
+          repository: 'upscayl/upscayl-ncnn'
+          tag: '20240601-103425'
+          fileName: '${{ steps.os_lower.outputs.lowercase }}.zip'
+
+      - name: Unpack Upscayl
+        run: 7z x ${{ steps.os_lower.outputs.lowercase }}.zip
+      
+      - name: Build Aeternum
+        run: cargo build --release --features "package"
+
+      - name: Compile .ISS to .EXE Installer
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        with:
+          path: assets/aeternum.iss
+          options: /O+ /version=${{ github.ref_name }}
+
+      - name: Upload Setup
+        env:
+            GH_TOKEN: ${{ github.token }}
+        run: gh release upload ${{ github.ref_name }} .\assets\Output\aeternum-setup.exe

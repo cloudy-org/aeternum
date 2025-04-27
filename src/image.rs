@@ -1,8 +1,7 @@
 use std::path::PathBuf;
-
 use imagesize::ImageSize;
 
-use crate::{upscale::Model, Error};
+use crate::{upscale::UpscaleOptions, Error};
 
 #[derive(Clone)]
 pub struct Image {
@@ -14,7 +13,7 @@ impl Image {
     pub fn from_path(path: PathBuf) -> Result<Self, Error> {
         if let Some(extension) = path.extension() {
             let allowed_extensions = vec!["png", "jpeg", "jpg", "webp"];
-            let extension_string = extension.to_string_lossy().to_string();
+            let extension_string = extension.to_string_lossy().to_string().to_lowercase();
 
             match allowed_extensions.iter().any(|e| extension_string.contains(e)) {
                 true => {
@@ -41,14 +40,17 @@ impl Image {
         }
     }
 
-    pub fn create_output(&self, scale: &i32, model: &Model) -> PathBuf {
+    pub fn create_output(&self, options: &UpscaleOptions) -> PathBuf {
+        let model = &options.model.clone().unwrap();
+        let extension = &options.output_ext.to_string().to_lowercase();
+
         let out = self.path.with_file_name(
             format!(
                 "{}_{}_x{}.{}", 
                 self.path.file_stem().unwrap().to_string_lossy(), 
                 model.name, 
-                scale,
-                self.path.extension().unwrap().to_string_lossy()
+                &options.scale,
+                extension
             )
         );
 

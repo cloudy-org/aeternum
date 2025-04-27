@@ -144,12 +144,7 @@ fn main() -> eframe::Result {
         }
     };
 
-    let custom_models_folder = match &config.misc.custom_models_folder == "" {
-        true => None,
-        false => Some(config.misc.custom_models_folder.clone()),
-    };
-
-    match upscale.init(custom_models_folder) {
+    match upscale.init(config.misc.enable_custom_folder) {
         Ok(_) => {},
         Err(error) => {
             notifier.toasts.lock().unwrap().toast_and_log(

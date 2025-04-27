@@ -35,6 +35,19 @@ impl Config {
             debug!("Config directory created!");
         }
 
+        let models_folder = aeternum_config_dir_path.join("models");
+
+        if !models_folder.exists() {
+            debug!("Creating models directory for aeternum...");
+            if let Err(err) = fs::create_dir_all(&models_folder) {
+                return Err(
+                    format!("Unable to create models path: {}", err).into()
+                );
+            };
+
+            debug!("Models directory created!");
+        }
+
         let toml_config_path = aeternum_config_dir_path.join("config.toml");
 
         if toml_config_path.exists() {

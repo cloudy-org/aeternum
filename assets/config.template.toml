@@ -4,5 +4,8 @@ version = 1
 about_box = "A"
 
 [misc]
-# Add custom models for upscaling.
-custom_models_folder = ""
+# Folder located at:
+# Linux: ~/.config/cloudy/aeternum/models
+# Mac: ~/Library/Application Support/cloudy/aeternum/models
+# Windows: %AppData%\cloudy\aeternum\models
+enable_custom_folder = true

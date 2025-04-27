@@ -2,14 +2,19 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Misc {
-    pub custom_models_folder: String
+    #[serde(default = "enable_default")] 
+    pub enable_custom_folder: bool
 }
 
 
 impl Default for Misc {
     fn default() -> Self {
         Self {
-            custom_models_folder: "".to_string()
+            enable_custom_folder: true
         }
     }
+}
+
+fn enable_default() -> bool {
+    true
 }

@@ -1,0 +1,3 @@
+AnimeSharp: https://openmodeldb.info/models/4x-AnimeSharp
+RealEsrgan: https://openmodeldb.info/models/4x-realesrgan-x4plus / https://openmodeldb.info/models/4x-realesrgan-x4plus-anime-6b
+UltraSharp: https://openmodeldb.info/models/4x-UltraSharp

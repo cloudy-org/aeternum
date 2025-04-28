@@ -1,5 +1,6 @@
 use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, Rect, RichText, Slider, Stroke, Vec2};
+use egui::{include_image, Align2, Button};
 use egui_notify::ToastLevel;
 use strum::IntoEnumIterator;
 use std::time::Duration;
@@ -50,8 +51,6 @@ impl eframe::App for Aeternum<'_> {
         self.upscale.update();
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            let window_rect = ctx.input(|i: &egui::InputState| i.screen_rect());
-
             self.notifier.update(ctx);
             self.about_box.update(ctx);
 
@@ -78,35 +77,39 @@ impl eframe::App for Aeternum<'_> {
                     }
                 });
 
-                ui.centered_and_justified(|ui| {
-                    let image_width: f32 = 145.0;
-                    let file_is_hovering = !ctx.input(|i| i.raw.hovered_files.is_empty());
+                egui::Area::new("centred_home_area".into())
+                    .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
+                    .show(ctx, |ui| {
+                        let file_is_hovering = !ctx.input(|i| i.raw.hovered_files.is_empty());
 
-                    let mut aeter_rect = Rect::NOTHING;
+                        let mut button_rect = Rect::NOTHING;
 
-                    egui::Frame::default()
-                        .outer_margin(
-                            Margin::symmetric(
-                                ((window_rect.width() / 2.0) - image_width / 2.0) as i8,
-                                ((window_rect.height() / 2.0) - image_width / 2.0) as i8
+                        ui.vertical_centered(|ui| {
+                            let image = egui::Image::new(
+                                include_image!("../assets/sparkles.gif")
+                            ).max_width(140.0);
+
+                            ui.add(image);
+                            ui.add_space(25.0);
+
+                            let button = Button::new(
+                                RichText::new("Open Image")
+                                    .size(25.0)
                             )
-                        )
-                        .show(ui, |ui| {
-                            let aeter_response = ui.add(
-                                egui::Image::new(files::get_aeternum_image())
-                                    .max_width(image_width)
-                                    .sense(egui::Sense::click())
+                            .min_size(Vec2::new(210.0, 60.0))
+                            .corner_radius(20.0);
+
+                            let button_response = ui.add(button);
+                            button_response.clone().on_hover_cursor(CursorIcon::PointingHand);
+                            button_rect = button_response.rect;
+                            ui.add_space(8.0);
+
+                            ui.label(
+                                RichText::new("Pick an image to upscale...")
+                                .size(10.0)
                             );
 
-                            aeter_rect = aeter_response.rect;
-
-                            if file_is_hovering {
-                                ui.label("You're about to drop a file.");
-                            }
-
-                            aeter_response.clone().on_hover_cursor(CursorIcon::PointingHand);
-
-                            if aeter_response.clicked() {
+                            if button_response.clicked() {
                                 let image_result = files::select_image();
 
                                 match image_result {
@@ -118,26 +121,27 @@ impl eframe::App for Aeternum<'_> {
                                     },
                                 }
                             }
+
+                            if file_is_hovering {
+                                ui.label("You're about to drop a file.");
+                            }
+                        });
+
+                        if file_is_hovering {
+                            let rect = button_rect.expand2(Vec2::new(150.0, 100.0));
+                            let painter = ui.painter();
+                
+                            let top_right = rect.right_top();
+                            let top_left = rect.left_top();
+                            let bottom_right = rect.right_bottom();
+                            let bottom_left = rect.left_bottom();
+                
+                            self.draw_dotted_line(painter, &[top_left, top_right]);
+                            self.draw_dotted_line(painter, &[top_right, bottom_right]);
+                            self.draw_dotted_line(painter, &[bottom_right, bottom_left]);
+                            self.draw_dotted_line(painter, &[bottom_left, top_left]);
                         }
-                    );
-
-                    if file_is_hovering {
-                        let rect = aeter_rect.expand2(
-                            Vec2::new(150.0, 100.0)
-                        );
-                        let painter = ui.painter();
-
-                        let top_right = rect.right_top();
-                        let top_left = rect.left_top();
-                        let bottom_right = rect.right_bottom();
-                        let bottom_left = rect.left_bottom();
-
-                        self.draw_dotted_line(painter, &[top_left, top_right]);
-                        self.draw_dotted_line(painter, &[top_right, bottom_right]);
-                        self.draw_dotted_line(painter, &[bottom_right, bottom_left]);
-                        self.draw_dotted_line(painter, &[bottom_left, top_left]);
-                    }
-                });
+                    });
 
                 return;
             }

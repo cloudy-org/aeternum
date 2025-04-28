@@ -1,3 +1,4 @@
+use cirrus_egui::v1::ui_utils::combo_box::{self};
 use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, Rect, RichText, Slider, Stroke, Vec2};
 use egui::{include_image, Align2, Button};
@@ -172,10 +173,11 @@ impl eframe::App for Aeternum<'_> {
                                             .width(230.0)
                                             .show_ui(ui, |ui| {
                                                 for model in self.upscale.models.iter() {
-                                                    ui.selectable_value(
+                                                    combo_box::ui_strong_selectable_value(
+                                                        ui,
                                                         &mut self.upscale.options.model,
                                                         Some(model.clone()),
-                                                        model.name.to_string()
+                                                        &model.name
                                                     );
                                                 }
                                             });
@@ -216,7 +218,8 @@ impl eframe::App for Aeternum<'_> {
                                         .width(230.0)
                                         .show_ui(ui, |ui| {
                                             for extension in OutputExt::iter() {
-                                                ui.selectable_value(
+                                                combo_box::ui_strong_selectable_value(
+                                                    ui,
                                                     &mut self.upscale.options.output_ext,
                                                     extension.clone(),
                                                     extension.to_string()

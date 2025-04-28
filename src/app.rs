@@ -207,7 +207,6 @@ impl eframe::App for Aeternum<'_> {
                                 });
                                 ui.end_row();
 
-
                                 ui.vertical_centered_justified(|ui| {
                                     ui.label("Save image as");
 
@@ -263,13 +262,17 @@ impl eframe::App for Aeternum<'_> {
                                 };
 
                                 ui.vertical_centered_justified(|ui| {
-                                    let upscale_button = ui.add_enabled(
-                                        button_enabled,
-                                        egui::Button::new(RichText::new("Upscale").size(20.0))
-                                            .min_size([50.0, 60.0].into())
+                                    let upscale_button = egui::Button::new(
+                                        RichText::new("Upscale")
+                                            .size(25.0)
+                                        )
+                                        .min_size([50.0, 60.0].into());
+
+                                    let upscale_button_response = ui.add_enabled(
+                                        button_enabled, upscale_button
                                     ).on_disabled_hover_text(disabled_text);
 
-                                    if upscale_button.clicked() {
+                                    if upscale_button_response.clicked() {
                                         self.upscale.upscale(image.clone(), &mut self.notifier);
                                     }
                                 });
@@ -285,7 +288,7 @@ impl eframe::App for Aeternum<'_> {
                     ui.centered_and_justified(|ui| {
                         ui.add(
                             egui::Image::from_uri(image_path)
-                                .rounding(4.0)
+                                .corner_radius(4.0)
                                 .shrink_to_fit()
                                 .max_size(
                                     [image.image_size.width as f32, image.image_size.height as f32].into()
@@ -309,7 +312,7 @@ impl eframe::App for Aeternum<'_> {
                         if self.image.is_some() {
                             let exit_button =
                                 ui.add(
-                                    egui::Button::new("<-")
+                                    egui::Button::new("<--")
                                 );
 
                             if exit_button.clicked() {

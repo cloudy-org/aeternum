@@ -11,6 +11,10 @@ Aeternum (lt.: "Eternal") is a simple and minimal image upscaler using [`upscayl
 Aeternum is built using [`rust`](https://www.rust-lang.org) and [`egui`](https://github.com/emilk/egui).
 
 # 🛠️ Installation
+> [!warning]
+> Aeternum, along with all other cloudy-org software is very **experimental**.
+> Report any bugs in the github issues tab above.
+
 ## 🪟 Windows 10+
 1. Download the setup (or the zip if you want it portable) from [the newest release](https://github.com/cloudy-org/aeternum/releases/latest).
 2. Run the setup/Extract the zip.

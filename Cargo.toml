@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "aeternum"
 edition = "2021"
@@ -31,7 +29,6 @@ imagesize = "0.13.0"
 clap = {version = "4.5.21", features = ["derive"]}
 strum_macros = "0.26.4"
 strum = "0.26.3"
-
 toml = "0.8.19"
 serde = {version = "1.0.215", features = ["derive"]}
 

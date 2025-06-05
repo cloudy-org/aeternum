@@ -40,20 +40,16 @@ impl Image {
         }
     }
 
-    pub fn create_output(&self, options: &UpscaleOptions) -> PathBuf {
+    pub fn create_output(&self, options: &UpscaleOptions) -> String {
         let model = &options.model.clone().unwrap();
         let extension = &options.output_ext.to_string().to_lowercase();
 
-        let out = self.path.with_file_name(
-            format!(
-                "{}_{}_x{}.{}", 
-                self.path.file_stem().unwrap().to_string_lossy(), 
-                model.name, 
-                &options.scale,
-                extension
-            )
-        );
-
-        out
+        format!(
+            "{}_{}_x{}.{}", 
+            self.path.file_stem().unwrap().to_string_lossy(), 
+            model.name, 
+            &options.scale,
+            extension
+        )
     }
 }

@@ -37,7 +37,7 @@ impl<'a> AboutWindow<'a> {
             authors: authors_toml_to_about_authors(&AUTHORS.to_string()),
             webpage: "https://github.com/cloudy-org/aeternum".to_string(),
             git_repo: "https://github.com/cloudy-org/aeternum".to_string(),
-            copyright: "Copyright (C) 2024 Ananas".to_string()
+            copyright: "Copyright (C) 2024-2025 Ananas".to_string()
         };
 
         let about_widget = About::new(

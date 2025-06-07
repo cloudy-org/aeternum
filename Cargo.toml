@@ -3,7 +3,7 @@
 [package]
 name = "aeternum"
 edition = "2021"
-version = "0.1.0"
+version = "0.1.1"
 description = "A simple and minimal upscaler built in rust"
 authors = ["Ananas <ananas@ananas.moe>"]
 license = "GPL-3.0"

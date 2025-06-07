@@ -1,8 +1,9 @@
 use cirrus_egui::v1::widgets::about::{authors_toml_to_about_authors, About, AboutApplicationInfo};
 use eframe::egui::{self, Key, Response, Vec2};
+use egui::include_image;
 use egui_notify::ToastLevel;
 
-use crate::{config::config::Config, files, notifier::NotifierAPI};
+use crate::{config::config::Config, notifier::NotifierAPI};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHORS: &str = include_str!("../../authors.toml");
@@ -40,7 +41,7 @@ impl<'a> AboutWindow<'a> {
         };
 
         let about_widget = About::new(
-            files::get_aeternum_image(), about_app_info
+            include_image!("../../assets/sparkles.png"), about_app_info
         );
 
         Self {

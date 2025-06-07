@@ -94,22 +94,28 @@ fn main() -> eframe::Result {
         None => None
     };
 
-    let theme = match theme_string {
+    let is_dark = match theme_string {
         Some(string) => {
             if string == "light" {
-                Theme::default(false)
+                false
             } else if string == "dark" {
-                Theme::default(true)
+                true
             } else {
                 log::warn!(
                     "'{}' is not a valid theme. Pass either 'dark' or 'light'.", string
                 );
 
-                Theme::default(true)
+                true
             }
         },
-        _ => Theme::default(true)
+        _ => true
     };
+
+    let theme = Theme::new(
+        is_dark,
+        vec![],
+        None
+    );
 
     let config = match Config::new() {
         Ok(config) => config,
@@ -157,14 +163,17 @@ fn main() -> eframe::Result {
 
             let mut custom_style = Style {..Default::default()};
 
-            custom_style.visuals.slider_trailing_fill = true;
             custom_style.spacing.slider_width = 180.0;
 
             Styling::new(&theme, Some(custom_style))
                 .set_all()
                 .apply(&cc.egui_ctx);
 
-            Ok(Box::new(Aeternum::new(image, theme, notifier, upscale, config)))
+            Ok(
+                Box::new(
+                    Aeternum::new(image, theme, notifier, upscale, config)
+                )
+            )
         }),
     )
 }

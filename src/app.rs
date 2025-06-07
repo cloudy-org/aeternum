@@ -1,5 +1,7 @@
-use cirrus_theming::v1::{Colour, Theme};
+use cirrus_egui::v1::ui_utils::combo_box::{self};
+use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, Rect, RichText, Slider, Stroke, Vec2};
+use egui::{include_image, Align2, Button};
 use egui_notify::ToastLevel;
 use strum::IntoEnumIterator;
 use std::time::Duration;
@@ -34,8 +36,7 @@ impl<'a> Aeternum<'a> {
                 Stroke {
                     width: 2.0,
                     color: Color32::from_hex(
-                        &self.theme.accent_colour.as_ref()
-                            .unwrap_or(&Colour {hex_code: "e05f78".into()}).hex_code
+                        &self.theme.accent_colour.hex_code
                     ).unwrap()
                 },
                 10.0,
@@ -51,8 +52,6 @@ impl eframe::App for Aeternum<'_> {
         self.upscale.update();
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            let window_rect = ctx.input(|i: &egui::InputState| i.screen_rect());
-
             self.notifier.update(ctx);
             self.about_box.update(ctx);
 
@@ -79,35 +78,39 @@ impl eframe::App for Aeternum<'_> {
                     }
                 });
 
-                ui.centered_and_justified(|ui| {
-                    let image_width: f32 = 145.0;
-                    let file_is_hovering = !ctx.input(|i| i.raw.hovered_files.is_empty());
+                egui::Area::new("centred_home_area".into())
+                    .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
+                    .show(ctx, |ui| {
+                        let file_is_hovering = !ctx.input(|i| i.raw.hovered_files.is_empty());
 
-                    let mut aeter_rect = Rect::NOTHING;
+                        let mut button_rect = Rect::NOTHING;
 
-                    egui::Frame::default()
-                        .outer_margin(
-                            Margin::symmetric(
-                                (window_rect.width() / 2.0) - image_width / 2.0,
-                                (window_rect.height() / 2.0) - image_width / 2.0
+                        ui.vertical_centered(|ui| {
+                            let image = egui::Image::new(
+                                include_image!("../assets/sparkles.gif")
+                            ).max_width(140.0);
+
+                            ui.add(image);
+                            ui.add_space(25.0);
+
+                            let button = Button::new(
+                                RichText::new("Open Image")
+                                    .size(25.0)
                             )
-                        )
-                        .show(ui, |ui| {
-                            let aeter_response = ui.add(
-                                egui::Image::new(files::get_aeternum_image())
-                                    .max_width(image_width)
-                                    .sense(egui::Sense::click())
+                            .min_size(Vec2::new(210.0, 60.0))
+                            .corner_radius(20.0);
+
+                            let button_response = ui.add(button);
+                            button_response.clone().on_hover_cursor(CursorIcon::PointingHand);
+                            button_rect = button_response.rect;
+                            ui.add_space(8.0);
+
+                            ui.label(
+                                RichText::new("Pick an image to upscale...")
+                                .size(10.0)
                             );
 
-                            aeter_rect = aeter_response.rect;
-
-                            if file_is_hovering {
-                                ui.label("You're about to drop a file.");
-                            }
-
-                            aeter_response.clone().on_hover_cursor(CursorIcon::PointingHand);
-
-                            if aeter_response.clicked() {
+                            if button_response.clicked() {
                                 let image_result = files::select_image();
 
                                 match image_result {
@@ -119,26 +122,27 @@ impl eframe::App for Aeternum<'_> {
                                     },
                                 }
                             }
+
+                            if file_is_hovering {
+                                ui.label("You're about to drop a file.");
+                            }
+                        });
+
+                        if file_is_hovering {
+                            let rect = button_rect.expand2(Vec2::new(150.0, 100.0));
+                            let painter = ui.painter();
+                
+                            let top_right = rect.right_top();
+                            let top_left = rect.left_top();
+                            let bottom_right = rect.right_bottom();
+                            let bottom_left = rect.left_bottom();
+                
+                            self.draw_dotted_line(painter, &[top_left, top_right]);
+                            self.draw_dotted_line(painter, &[top_right, bottom_right]);
+                            self.draw_dotted_line(painter, &[bottom_right, bottom_left]);
+                            self.draw_dotted_line(painter, &[bottom_left, top_left]);
                         }
-                    );
-
-                    if file_is_hovering {
-                        let rect = aeter_rect.expand2(
-                            Vec2::new(150.0, 100.0)
-                        );
-                        let painter = ui.painter();
-
-                        let top_right = rect.right_top();
-                        let top_left = rect.left_top();
-                        let bottom_right = rect.right_bottom();
-                        let bottom_left = rect.left_bottom();
-
-                        self.draw_dotted_line(painter, &[top_left, top_right]);
-                        self.draw_dotted_line(painter, &[top_right, bottom_right]);
-                        self.draw_dotted_line(painter, &[bottom_right, bottom_left]);
-                        self.draw_dotted_line(painter, &[bottom_left, top_left]);
-                    }
-                });
+                    });
 
                 return;
             }
@@ -169,10 +173,11 @@ impl eframe::App for Aeternum<'_> {
                                             .width(230.0)
                                             .show_ui(ui, |ui| {
                                                 for model in self.upscale.models.iter() {
-                                                    ui.selectable_value(
+                                                    combo_box::ui_strong_selectable_value(
+                                                        ui,
                                                         &mut self.upscale.options.model,
                                                         Some(model.clone()),
-                                                        model.name.to_string()
+                                                        &model.name
                                                     );
                                                 }
                                             });
@@ -202,7 +207,6 @@ impl eframe::App for Aeternum<'_> {
                                 });
                                 ui.end_row();
 
-
                                 ui.vertical_centered_justified(|ui| {
                                     ui.label("Save image as");
 
@@ -213,7 +217,8 @@ impl eframe::App for Aeternum<'_> {
                                         .width(230.0)
                                         .show_ui(ui, |ui| {
                                             for extension in OutputExt::iter() {
-                                                ui.selectable_value(
+                                                combo_box::ui_strong_selectable_value(
+                                                    ui,
                                                     &mut self.upscale.options.output_ext,
                                                     extension.clone(),
                                                     extension.to_string()
@@ -257,13 +262,17 @@ impl eframe::App for Aeternum<'_> {
                                 };
 
                                 ui.vertical_centered_justified(|ui| {
-                                    let upscale_button = ui.add_enabled(
-                                        button_enabled,
-                                        egui::Button::new(RichText::new("Upscale").size(20.0))
-                                            .min_size([50.0, 60.0].into())
+                                    let upscale_button = egui::Button::new(
+                                        RichText::new("Upscale")
+                                            .size(25.0)
+                                        )
+                                        .min_size([50.0, 60.0].into());
+
+                                    let upscale_button_response = ui.add_enabled(
+                                        button_enabled, upscale_button
                                     ).on_disabled_hover_text(disabled_text);
 
-                                    if upscale_button.clicked() {
+                                    if upscale_button_response.clicked() {
                                         self.upscale.upscale(image.clone(), &mut self.notifier);
                                     }
                                 });
@@ -279,7 +288,7 @@ impl eframe::App for Aeternum<'_> {
                     ui.centered_and_justified(|ui| {
                         ui.add(
                             egui::Image::from_uri(image_path)
-                                .rounding(4.0)
+                                .corner_radius(4.0)
                                 .shrink_to_fit()
                                 .max_size(
                                     [image.image_size.width as f32, image.image_size.height as f32].into()
@@ -294,8 +303,8 @@ impl eframe::App for Aeternum<'_> {
         egui::TopBottomPanel::top("menu_bar")
             .show_separator_line(false)
             .frame(
-                Frame::none()
-                    .outer_margin(Margin {right: 10.0, top: 7.0, ..Default::default()})
+                Frame::NONE
+                    .outer_margin(Margin {right: 10, top: 7, ..Default::default()})
             )
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
@@ -303,7 +312,7 @@ impl eframe::App for Aeternum<'_> {
                         if self.image.is_some() {
                             let exit_button =
                                 ui.add(
-                                    egui::Button::new("<-")
+                                    egui::Button::new("<--")
                                 );
 
                             if exit_button.clicked() {
@@ -318,8 +327,8 @@ impl eframe::App for Aeternum<'_> {
         egui::TopBottomPanel::bottom("status_bar")
             .show_separator_line(false)
             .frame(
-                Frame::none()
-                    .outer_margin(Margin {right: 12.0, bottom: 8.0, ..Default::default()})
+                Frame::NONE
+                    .outer_margin(Margin {right: 12, bottom: 8, ..Default::default()})
             ).show(ctx, |ui| {
                 if let Ok(loading_status) = self.notifier.loading_status.try_read() {
                     if let Some(loading) = loading_status.as_ref() {
@@ -330,7 +339,11 @@ impl eframe::App for Aeternum<'_> {
 
                             ui.add(
                                 egui::Spinner::new()
-                                    .color(Color32::from_hex("#e05f78").unwrap()) // NOTE: This should be the default accent colour.
+                                    .color(
+                                        Color32::from_hex(
+                                            &self.theme.accent_colour.hex_code
+                                        ).unwrap()
+                                    )
                                     .size(20.0)
                             );
                         });

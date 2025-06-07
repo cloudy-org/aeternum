@@ -1,13 +1,8 @@
 use std::path::PathBuf;
 
-use eframe::egui::{self, ImageSource};
 use rfd::FileDialog;
 
 use crate::{image::Image, Error};
-
-pub fn get_aeternum_image<'a>() -> ImageSource<'a> {
-    egui::include_image!("../assets/image.png")
-}
 
 pub fn select_image() -> Result<Image, Error> {
     let image_path = FileDialog::new()

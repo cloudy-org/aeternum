@@ -1,7 +1,8 @@
 use cirrus_egui::v1::ui_utils::combo_box::{self};
 use cirrus_theming::v1::Theme;
-use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, Rect, RichText, Slider, Stroke, Vec2};
-use egui::{include_image, Align2, Button, Direction, OpenUrl, Pos2, Sense};
+use clap::builder::styling::Color;
+use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, Rect, RichText, Slider, Vec2};
+use egui::{include_image, Button, OpenUrl, Sense};
 use egui_notify::ToastLevel;
 use strum::IntoEnumIterator;
 use std::time::Duration;
@@ -135,7 +136,9 @@ impl eframe::App for Aeternum<'_> {
                                             None => (0, 0),
                                         };
 
-                                        ui.label(format!("({}x{})", image_size.0 * scale, image_size.1 * scale));
+                                        ui.label(
+                                            format!("({}x{})", image_size.0 * scale as i32, image_size.1 * scale as i32)
+                                        );
                                     });
                                     ui.end_row();
 
@@ -208,7 +211,7 @@ impl eframe::App for Aeternum<'_> {
                                             self.upscale.options.model.is_some(), upscale_button
                                         ).on_disabled_hover_text("No model selected.")
                                         .on_hover_cursor(CursorIcon::PointingHand);
-    
+
                                         if upscale_button_response.clicked() {
                                             self.upscale.upscale(self.image.clone().unwrap(), &mut self.notifier);
                                         }
@@ -218,6 +221,32 @@ impl eframe::App for Aeternum<'_> {
                         });
                     });
                 });
+
+            let menu_bar_response = egui::TopBottomPanel::top("menu_bar")
+                .show_separator_line(false)
+                .frame(
+                    Frame::new()
+                        .inner_margin(Margin {right: 10, top: 10, ..1.into()})
+                )
+                .show(ctx, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                            if self.image.is_some() {
+                                let button = egui::Button::new(
+                                RichText::new("New Image").size(14.0)
+                                ).min_size(Vec2::new(90.0, 25.0));
+    
+                                let response = ui.add(button)
+                                    .on_hover_cursor(CursorIcon::PointingHand);
+    
+                                if response.clicked() {
+                                    // self.upscale.reset_options();
+                                    self.image = None;
+                                }
+                            }
+                        });
+                    });
+                }).response;
 
             egui::CentralPanel::default()
                 .show(ctx, |ui| {
@@ -240,9 +269,12 @@ impl eframe::App for Aeternum<'_> {
                             let mut button_rect = Rect::NOTHING;
 
                             ui.centered_and_justified(|ui| {
-                                ui.add_space(ui.available_height() / 4.0);
+                                const SIZE_OF_VERTICAL_CENTRED: f32 = 231.0; // WARNING: changing anything under "ui.vertical_centered"
+                                // will alter this size value so make sure you update it.
 
-                                ui.vertical_centered(|ui| {
+                                ui.add_space(((ui.available_height() + menu_bar_response.rect.height()) / 2.0) - SIZE_OF_VERTICAL_CENTRED / 1.7);
+
+                                let vertical_centred_response = ui.vertical_centered(|ui| {
                                     let image = egui::Image::new(
                                         include_image!("../assets/sparkles_150x150.gif")
                                     ).max_width(130.0);
@@ -281,39 +313,18 @@ impl eframe::App for Aeternum<'_> {
                                             },
                                         }
                                     }
-                                });
+                                }).response;
 
+                                assert_eq!(
+                                    vertical_centred_response.rect.height(),
+                                    SIZE_OF_VERTICAL_CENTRED,
+                                    "Some programmer did an idiot move..."
+                                );
                             });
                         },
                     }
                 });
-
-            ctx.request_repaint_after_secs(1.0);
         });
-
-        egui::TopBottomPanel::top("menu_bar")
-            .show_separator_line(false)
-            .frame(
-                Frame::NONE
-                    .outer_margin(Margin {right: 10, top: 7, ..Default::default()})
-            )
-            .show(ctx, |ui| {
-                ui.horizontal(|ui| {
-                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                        if self.image.is_some() {
-                            let exit_button =
-                                ui.add(
-                                    egui::Button::new("New Image")
-                                );
-
-                            if exit_button.clicked() {
-                                // self.upscale.reset_options();
-                                self.image = None;
-                            }
-                        }
-                    });
-                });
-            });
 
         egui::TopBottomPanel::bottom("status_bar")
             .show_separator_line(false)

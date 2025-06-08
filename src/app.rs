@@ -1,6 +1,5 @@
 use cirrus_egui::v1::ui_utils::combo_box::{self};
 use cirrus_theming::v1::Theme;
-use clap::builder::styling::Color;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, Rect, RichText, Slider, Vec2};
 use egui::{include_image, Button, OpenUrl, Sense};
 use egui_notify::ToastLevel;

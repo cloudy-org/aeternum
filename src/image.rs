@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use imagesize::ImageSize;
 
 use crate::{upscale::UpscaleOptions, Error};

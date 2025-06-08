@@ -1,7 +1,7 @@
 use cirrus_egui::v1::ui_utils::combo_box::{self};
 use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, Rect, RichText, Slider, Vec2};
-use egui::{include_image, Button, OpenUrl, Sense};
+use egui::{include_image, Button, OpenUrl, Sense, UiBuilder};
 use egui_notify::ToastLevel;
 use strum::IntoEnumIterator;
 use std::time::Duration;
@@ -55,7 +55,7 @@ impl eframe::App for Aeternum<'_> {
                 .show(ctx, |ui| {
                     ui.vertical_centered(|ui| {
                         let (_, rect) = ui.allocate_space(Vec2::new(ui.available_size().x, 35.0));
-                        let mut child_ui = ui.child_ui(rect, Layout::default(), None);
+                        let mut child_ui = ui.new_child(UiBuilder::new().max_rect(rect).layout(Layout::default()));
 
                         let header_response = child_ui.horizontal_centered(|ui| {
                             let image = egui::Image::new(
@@ -174,7 +174,7 @@ impl eframe::App for Aeternum<'_> {
                                     ui.vertical_centered_justified(|ui| {
                                         ui.label(RichText::new("Output Folder").size(20.0).strong());
                                         ui.label(RichText::new("Folder to drop your upscaled image.").size(10.0));
-    
+
                                         let output_button = match &self.upscale.options.output {
                                             Some(path) => ui.button(path.to_str().unwrap()),
                                             None => {
@@ -304,6 +304,14 @@ impl eframe::App for Aeternum<'_> {
                                         match image_result {
                                             Ok(image) => {
                                                 self.image = Some(image);
+                                                // I was able to get the memory of Aeternum to 
+                                                // 500 MB by just loading a different image after another.
+                                                // 
+                                                // Using "ctx.forget_all_images()" should be okay for now as this 
+                                                // also clears the "sparkles" gif that takes a very big amount of 
+                                                // memory that I also want cleared from memory as we won't be 
+                                                // seeing it again when we load an image.
+                                                ctx.forget_all_images();
                                             },
                                             Err(error) => {
                                                 self.notifier.toasts.lock().unwrap()

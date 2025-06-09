@@ -1,7 +1,7 @@
 use cirrus_egui::v1::ui_utils::combo_box::{self};
 use cirrus_theming::v1::Theme;
-use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, Rect, RichText, Slider, Vec2};
-use egui::{include_image, Button, OpenUrl, Sense, UiBuilder};
+use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, RichText, Slider, Vec2};
+use egui::{include_image, Button, OpenUrl, Sense, Stroke, UiBuilder};
 use egui_notify::ToastLevel;
 use strum::IntoEnumIterator;
 use std::time::Duration;
@@ -34,7 +34,7 @@ impl eframe::App for Aeternum<'_> {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.about_box.handle_input(ctx);
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show(ctx, |_ui| {
             self.upscale.update();
             self.notifier.update(ctx);
             self.about_box.update(ctx);
@@ -247,90 +247,152 @@ impl eframe::App for Aeternum<'_> {
                     });
                 }).response;
 
-            egui::CentralPanel::default()
-                .show(ctx, |ui| {
-                    match self.image.as_ref() {
-                        Some(image) => {
-                            let image_path = format!("file://{}", image.path.to_string_lossy());
+            egui::CentralPanel::default().show(ctx, |ui| {
+                match self.image.as_ref() {
+                    Some(image) => {
+                        let image_path = format!("file://{}", image.path.to_string_lossy());
 
-                            ui.centered_and_justified(|ui| {
-                                ui.add(
-                                    egui::Image::from_uri(image_path)
-                                        .corner_radius(8.0)
-                                        .shrink_to_fit()
-                                        .max_size(
-                                            [image.image_size.width as f32, image.image_size.height as f32].into()
-                                        )
-                                )
-                            });
-                        },
-                        None => {
-                            let mut button_rect = Rect::NOTHING;
-
-                            ui.centered_and_justified(|ui| {
-                                const SIZE_OF_VERTICAL_CENTRED: f32 = 231.0; // WARNING: changing anything under "ui.vertical_centered"
-                                // will alter this size value so make sure you update it.
-
-                                ui.add_space(((ui.available_height() + menu_bar_response.rect.height()) / 2.0) - SIZE_OF_VERTICAL_CENTRED / 1.7);
-
-                                let vertical_centred_response = ui.vertical_centered(|ui| {
-                                    let image = egui::Image::new(
-                                        include_image!("../assets/sparkles_150x150.gif")
-                                    ).max_width(130.0);
-    
-                                    ui.add(image);
-                                    ui.add_space(15.0);
-    
-                                    let button = Button::new(
-                                        RichText::new("Open Image")
-                                            .size(25.0)
+                        ui.centered_and_justified(|ui| {
+                            ui.add(
+                                egui::Image::from_uri(image_path)
+                                    .corner_radius(8.0)
+                                    .shrink_to_fit()
+                                    .max_size(
+                                        [image.image_size.width as f32, image.image_size.height as f32].into()
                                     )
-                                    .min_size(Vec2::new(190.0, 60.0))
-                                    .corner_radius(20.0);
-    
-                                    let button_response = ui.add(button);
-                                    button_response.clone().on_hover_cursor(CursorIcon::PointingHand);
-                                    button_rect = button_response.rect;
-                                    ui.add_space(8.0);
-    
-                                    ui.label(
-                                        RichText::new("Pick an image to upscale...")
-                                        .size(10.0)
-                                    );
-    
-                                    if button_response.clicked() {
-                                        let image_result = files::select_image();
-    
-                                        match image_result {
-                                            Ok(image) => {
-                                                self.image = Some(image);
-                                                // I was able to get the memory of Aeternum to 
-                                                // 500 MB by just loading a different image after another.
-                                                // 
-                                                // Using "ctx.forget_all_images()" should be okay for now as this 
-                                                // also clears the "sparkles" gif that takes a very big amount of 
-                                                // memory that I also want cleared from memory as we won't be 
-                                                // seeing it again when we load an image.
-                                                ctx.forget_all_images();
-                                            },
-                                            Err(error) => {
-                                                self.notifier.toasts.lock().unwrap()
-                                                    .toast_and_log(error.into(), ToastLevel::Error)
-                                                    .duration(Some(Duration::from_secs(5)));
-                                            },
-                                        }
-                                    }
-                                }).response;
+                            )
+                        });
+                    },
+                    None => {
+                        // Collect dropped files. UNTESTED!
+                        ctx.input(|i| {
+                            let dropped_files = &i.raw.dropped_files;
 
-                                assert_eq!(
-                                    vertical_centred_response.rect.height(),
-                                    SIZE_OF_VERTICAL_CENTRED,
-                                    "Some programmer did an idiot move..."
+                            if !dropped_files.is_empty() {
+                                let path = dropped_files.first()
+                                    .unwrap()
+                                    .path
+                                    .as_ref()
+                                    .unwrap(); // Umm I wonder why "PathBuf" is optional (Optional<T>) here.
+
+                                match Image::from_path(path.clone()) {
+                                    Ok(image) => self.image = Some(image),
+                                    Err(error) => {
+                                        self.notifier.toasts.lock().unwrap().toast_and_log(
+                                            error.into(), ToastLevel::Error
+                                        );
+                                        return;
+                                    }
+                                };
+                            }
+                        });
+
+                        ui.centered_and_justified(|ui| {
+                            const SIZE_OF_VERTICAL_CENTRED: f32 = 231.0; // WARNING: changing anything under "ui.vertical_centered"
+                            // will alter this size value so make sure you update it.
+
+                            let file_is_hovering = !ctx.input(|i| i.raw.hovered_files.is_empty());
+
+                            ui.add_space(((ui.available_height() + menu_bar_response.rect.height()) / 2.0) - SIZE_OF_VERTICAL_CENTRED / 1.7);
+
+                            let vertical_centred_response = ui.vertical_centered(|ui| {
+                                let image = egui::Image::new(
+                                    include_image!("../assets/sparkles_150x150.gif")
+                                ).max_width(130.0);
+
+                                ui.add(image);
+                                ui.add_space(15.0);
+
+                                let button = Button::new(
+                                    RichText::new("Open Image")
+                                        .size(25.0)
+                                )
+                                .min_size(Vec2::new(190.0, 60.0))
+                                .corner_radius(20.0);
+
+                                let button_response = ui.add(button);
+                                button_response.clone().on_hover_cursor(CursorIcon::PointingHand);
+                                //button_rect = button_response.rect;
+                                ui.add_space(8.0);
+
+                                let hint_message = match file_is_hovering {
+                                    true => "Drop image to upscale it...",
+                                    false => "Pick an image to upscale...",
+                                };
+
+                                ui.label(
+                                    RichText::new(hint_message)
+                                    .size(10.0)
                                 );
-                            });
-                        },
-                    }
-                });
+
+                                if button_response.clicked() {
+                                    let image_result = files::select_image();
+
+                                    match image_result {
+                                        Ok(image) => {
+                                            self.image = Some(image);
+                                            // I was able to get the memory of Aeternum to 
+                                            // 500 MB by just loading a different image after another.
+                                            // 
+                                            // Using "ctx.forget_all_images()" should be okay for now as this 
+                                            // also clears the "sparkles" gif that takes a very big amount of 
+                                            // memory that I also want cleared from memory as we won't be 
+                                            // seeing it again when we load an image.
+                                            ctx.forget_all_images();
+                                        },
+                                        Err(error) => {
+                                            self.notifier.toasts.lock().unwrap()
+                                                .toast_and_log(error.into(), ToastLevel::Error)
+                                                .duration(Some(Duration::from_secs(5)));
+                                        },
+                                    }
+                                }
+                            }).response;
+
+                            if file_is_hovering {
+                                let mut rect = vertical_centred_response.rect.clone();
+                                rect.set_width(190.0);
+
+                                rect = rect.expand2(Vec2::new(150.0, 100.0));
+                                rect.set_center(vertical_centred_response.rect.center());
+
+                                let painter = ui.painter();
+
+                                // Draw dotted lines to indicate file being dropped.
+                                for index in 0..4 {
+                                    let pos = match index {
+                                        0 => &[rect.left_top(), rect.right_top()],
+                                        1 => &[rect.right_top(), rect.right_bottom()],
+                                        2 => &[rect.right_bottom(), rect.left_bottom()],
+                                        3 => &[rect.left_bottom(), rect.left_top()],
+                                        _ => unreachable!()
+                                    };
+
+                                    painter.add(
+                                        egui::Shape::dashed_line(
+                                            pos,
+                                            Stroke {
+                                                width: 2.0,
+                                                color: Color32::from_hex(
+                                                    &self.theme.accent_colour.hex_code
+                                                ).unwrap()
+                                            },
+                                            11.0,
+                                            10.0
+                                        )
+                                    );
+                                }
+                            }
+
+                            assert_eq!(
+                                vertical_centred_response.rect.height(),
+                                SIZE_OF_VERTICAL_CENTRED,
+                                "Some programmer did an idiot move..."
+                            );
+                        });
+                    },
+                }
+            });
         });
 
         egui::TopBottomPanel::bottom("status_bar")

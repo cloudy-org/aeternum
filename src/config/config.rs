@@ -8,7 +8,6 @@ use crate::config::structs::{keybinds::KeyBinds, misc::Misc};
 pub struct Config {
     pub version: i8,
     pub keybinds: KeyBinds,
-
     pub misc: Misc
 }
 

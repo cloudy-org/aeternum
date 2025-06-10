@@ -1,9 +1,7 @@
-[workspace]
-
 [package]
 name = "aeternum"
 edition = "2021"
-version = "0.1.1"
+version = "0.1.2-beta.1"
 description = "A simple and minimal upscaler built in rust"
 authors = ["Ananas <ananas@ananas.moe>"]
 license = "GPL-3.0"
@@ -11,34 +9,26 @@ repository = "https://github.com/cloudy-org/aeternum/"
 rust-version = "1.81"
 
 [dependencies]
-cirrus_egui = {workspace = true}
-cirrus_theming = {workspace = true}
-
-clap = {version = "4.5.21", features = ["derive"]}
+cirrus_egui = {path = "./cirrus/egui"}
+cirrus_theming = {path = "./cirrus/theming"}
 
 rfd = "0.15.1"
-eframe = { version = "0.29.1", features = ["default"] }
-egui_extras = { version = "0.29.1", features = ["all_loaders", "file"]}
+egui = "0.31.1"
+eframe = { version = "0.31.1", features = ["default"] }
+egui_extras = { version = "0.31.1", features = ["all_loaders", "file"]}
 log = "0.4.22"
 env_logger = "0.11.5"
-egui-notify = "0.17.0"
+egui-notify = "0.19"
 serde_derive = "1.0.215"
 textwrap = "0.16.1"
 which = "7.0.1"
-toml = {workspace = true}
-serde = {workspace = true, features = ["derive"]}
 image = {version = "0.25.5", features = ["png", "jpeg", "webp"]}
 glob = "0.3.1"
 dirs = "5.0.1"
 imagesize = "0.13.0"
+clap = {version = "4.5.21", features = ["derive"]}
 strum_macros = "0.26.4"
 strum = "0.26.3"
-
-[workspace.dependencies]
-cirrus_egui = { path = "./cirrus/egui" }
-cirrus_theming = { path = "./cirrus/theming" }
-
-egui = "0.29.1"
 toml = "0.8.19"
 serde = {version = "1.0.215", features = ["derive"]}
 

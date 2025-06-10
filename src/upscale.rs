@@ -25,7 +25,7 @@ pub struct Model {
 
 #[derive(Clone)]
 pub struct UpscaleOptions {
-    pub scale: i32,
+    pub scale: i8,
     pub compression: i32,
     pub model: Option<Model>,
     pub output_ext: OutputExt,

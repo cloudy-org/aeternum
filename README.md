@@ -3,7 +3,9 @@
   # ∞ aeternum
   <sub>A simple and minimal upscaler built in rust</sub>
 
-  <img src="./assets/dev_preview_2.png">
+  <img src="https://github.com/user-attachments/assets/e88d36f0-0bc1-4f96-a981-bd25445cbdae">
+
+  <sub>preview from v0.1.2-beta.1</sub>
 </div>
 
 # What is Aeternum?

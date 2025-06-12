@@ -1,5 +1,6 @@
-// https://github.com/cloudy-org/roseate/blob/main/src/error.rs
 use std::{fmt::{self, Display, Formatter}, path::PathBuf};
+
+use cirrus_egui::v1::error::CloudyError;
 
 type AE = Option<String>;
 
@@ -16,9 +17,23 @@ pub enum Error {
     FailedToGetCurrentExecutablePath(AE)
 }
 
-impl Error {
-    pub fn message(&self) -> String {
+impl CloudyError for Error {
+    fn human_message(&self) -> String {
         format!("{}", self)
+    }
+
+    fn actual_error(&self) -> Option<String> {
+        match self.to_owned() {
+            Error::FileNotFound(actual_error, _, _) => actual_error,
+            Error::NoFileSelected(actual_error) => actual_error,
+            Error::FailedToUpscaleImage(actual_error, _) => actual_error,
+            Error::UpscaylNotInPath(actual_error) => actual_error,
+            Error::ModelsFolderNotFound(actual_error, _) => actual_error,
+            Error::NoModels(actual_error, _) => actual_error,
+            Error::FailedToInitImage(actual_error, _, _) => actual_error,
+            Error::ImageFormatNotSupported(actual_error, _) => actual_error,
+            Error::FailedToGetCurrentExecutablePath(actual_error) => actual_error,
+        }
     }
 }
 

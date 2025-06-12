@@ -8,16 +8,14 @@ use log::debug;
 use eframe::egui::{self, Style};
 use egui_notify::ToastLevel;
 use cirrus_theming::v1::Theme;
-use cirrus_egui::v1::styling::Styling;
+use cirrus_egui::v1::{notifier::Notifier, styling::Styling};
 use clap::{arg, command, Parser};
 use error::Error;
 
 use config::config::Config;
-use notifier::NotifierAPI;
 use upscale::Upscale;
 
 mod error;
-mod notifier;
 mod app;
 mod image;
 mod windows;
@@ -44,7 +42,7 @@ fn main() -> eframe::Result {
 
     env_logger::init();
 
-    let notifier = NotifierAPI::new();
+    let notifier: Notifier<Error> = Notifier::new();
 
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
@@ -73,19 +71,25 @@ fn main() -> eframe::Result {
                     "That file doesn't exist!".to_string()
                 );
 
-                notifier.toasts.lock().unwrap().toast_and_log(
-                    error.into(), ToastLevel::Error
-                ).duration(Some(Duration::from_secs(10)));
+                notifier.toast(
+                    error,
+                    ToastLevel::Error,
+                    |toast| {
+                        toast.duration(Some(Duration::from_secs(10)));
+                    }
+                );
 
                 None
             } else {
                 match Image::from_path(path) {
                     Ok(image) => Some(image),
                     Err(error) => {
-                        notifier.toasts.lock().unwrap().toast_and_log(
-                            error.into(), ToastLevel::Error
+                        notifier.toast(
+                            error,
+                            ToastLevel::Error,
+                            |_| {}
                         );
-                        
+
                         None
                     }
                 }
@@ -120,14 +124,16 @@ fn main() -> eframe::Result {
     let config = match Config::new() {
         Ok(config) => config,
         Err(error) => {
-
-            notifier.toasts.lock().unwrap().toast_and_log(
+            notifier.toast(
                 format!(
                     "Error occurred getting aeternum's config file! \
                     Defaulting to default config. Error: {}", error.to_string().as_str()
-                ).into(), 
-                ToastLevel::Error
-            ).duration(Some(Duration::from_secs(10)));
+                ), 
+                ToastLevel::Error,
+                |toast| {
+                    toast.duration(Some(Duration::from_secs(10)));
+                }
+            );
 
             Config::default()
         }
@@ -136,22 +142,26 @@ fn main() -> eframe::Result {
     let mut upscale = match Upscale::new() {
         Ok(upscale) => upscale,
         Err(error) => {
-            notifier.toasts.lock().unwrap().toast_and_log(
-                error.clone().into(), ToastLevel::Error
+            notifier.toast(
+                error.clone(),
+                ToastLevel::Error,
+                |_| {}
             );
 
-            panic!("{}", error.clone().to_string());
+            panic!("{}", error.to_string());
         }
     };
 
     match upscale.init(config.misc.enable_custom_folder) {
         Ok(_) => {},
         Err(error) => {
-            notifier.toasts.lock().unwrap().toast_and_log(
-                error.clone().into(), ToastLevel::Error
+            notifier.toast(
+                error.clone(),
+                ToastLevel::Error,
+                |_| {}
             );
 
-            panic!("{}", error.clone().to_string());
+            panic!("{}", error.to_string());
         }
     }
 

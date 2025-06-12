@@ -3,7 +3,7 @@ use egui_notify::ToastLevel;
 use std::process::Command;
 use strum_macros::{EnumIter, Display};
 
-use crate::{error::Error, image::Image, notifier::NotifierAPI};
+use crate::{app::Notifier, error::Error, image::Image};
 
 #[derive(Clone, PartialEq, EnumIter, Display)]
 pub enum OutputExt {
@@ -152,7 +152,7 @@ impl Upscale {
         self.upscaling_arc = Arc::new(false.into());
     }
 
-    pub fn upscale(&mut self, image: Image, notifier: &mut NotifierAPI) {
+    pub fn upscale(&mut self, image: Image, notifier: &Notifier) {
         self.upscaling_reset();
 
         let path = &image.path;
@@ -169,7 +169,7 @@ impl Upscale {
         let path = path.clone();
         let cli_path = self.cli_path.clone();
         let upscaling_arc = self.upscaling_arc.clone();
-        let mut notifier_arc = notifier.clone();
+        let notifier_arc = notifier.clone();
         let options = self.options.clone();
 
         let mut upscaling = self.upscaling_arc.lock().unwrap();
@@ -234,17 +234,25 @@ impl Upscale {
                             if status.status.success() {
                                 let upscale_time = now.elapsed().as_secs();
 
-                                notifier_arc.toasts.lock().unwrap()
-                                    .toast_and_log(format!("Successfully upscaled image in {} seconds!", upscale_time).into(), ToastLevel::Success)
-                                    .duration(Some(Duration::from_secs(10)));
+                                notifier_arc.toast(
+                                    format!("Successfully upscaled image in {} seconds!", upscale_time),
+                                    ToastLevel::Success,
+                                    |toast| {
+                                        toast.duration(Some(Duration::from_secs(10)));
+                                    }
+                                );
                             } else {
                                 let error = Error::FailedToUpscaleImage(
                                     None,
                                     "Process returned as not successful.".to_string()
                                 );
-                                notifier_arc.toasts.lock().unwrap()
-                                    .toast_and_log(error.into(), ToastLevel::Error)
-                                    .duration(Some(Duration::from_secs(10)));
+                                notifier_arc.toast(
+                                    error,
+                                    ToastLevel::Error,
+                                    |toast| {
+                                        toast.duration(Some(Duration::from_secs(10)));
+                                    }
+                                );
                             }
                         },
                         Err(error) => {
@@ -253,18 +261,26 @@ impl Upscale {
                                 "Failed to wait for process.".to_string()
                             );
 
-                            notifier_arc.toasts.lock().unwrap()
-                                .toast_and_log(error.into(), ToastLevel::Error)
-                                .duration(Some(Duration::from_secs(10)));
+                            notifier_arc.toast(
+                                error,
+                                ToastLevel::Error,
+                                |toast| {
+                                    toast.duration(Some(Duration::from_secs(10)));
+                                }
+                            );
                         }
                     }
                 },
                 Err(error) => {
                     let error = Error::FailedToUpscaleImage(Some(error.to_string()), "Failed to spawn child process.".to_string());
 
-                    notifier_arc.toasts.lock().unwrap()
-                        .toast_and_log(error.into(), ToastLevel::Error)
-                        .duration(Some(Duration::from_secs(10)));
+                    notifier_arc.toast(
+                        error,
+                        ToastLevel::Error,
+                        |toast| {
+                            toast.duration(Some(Duration::from_secs(10)));
+                        }
+                    );
                 }
             }
 

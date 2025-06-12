@@ -3,7 +3,7 @@ use eframe::egui::{self, Key, Response, Vec2};
 use egui::include_image;
 use egui_notify::ToastLevel;
 
-use crate::{config::config::Config, notifier::NotifierAPI};
+use crate::{app::Notifier, config::config::Config};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHORS: &str = include_str!("../../authors.toml");
@@ -16,13 +16,14 @@ pub struct AboutWindow<'a> {
 }
 
 impl<'a> AboutWindow<'a> {
-    pub fn new(config: &Config, notifier: &mut NotifierAPI) -> Self {        
+    pub fn new(config: &Config, notifier: &Notifier) -> Self {        
         let config_key = match Key::from_name(&config.keybinds.about_box) {
             Some(key) => key,
             None => {
-                notifier.toasts.lock().unwrap().toast_and_log(
-                    "The key bind set for 'about_box' is invalid! Defaulting to `A`.".into(), 
-                    ToastLevel::Error
+                notifier.toast(
+                    "The key bind set for 'about_box' is invalid! Defaulting to `A`.", 
+                    ToastLevel::Error,
+                    |_| {}
                 );
 
                 Key::A

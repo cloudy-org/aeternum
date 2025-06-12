@@ -1,4 +1,4 @@
-use cirrus_egui::v1::ui_utils::combo_box::{self};
+use cirrus_egui::v1::{ui_utils::combo_box::{self}};
 use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, RichText, Slider, Vec2};
 use egui::{include_image, Button, OpenUrl, Sense, Stroke, UiBuilder};
@@ -6,19 +6,21 @@ use egui_notify::ToastLevel;
 use strum::IntoEnumIterator;
 use std::time::Duration;
 
-use crate::{config::config::Config, files, notifier::NotifierAPI, upscale::{OutputExt, Upscale}, windows::about::AboutWindow, Image};
+use crate::{config::config::Config, error::Error, files, upscale::{OutputExt, Upscale}, windows::about::AboutWindow, Image};
+
+pub type Notifier = cirrus_egui::v1::notifier::Notifier<Error>;
 
 pub struct Aeternum<'a> {
     theme: Theme,
     image: Option<Image>,
     about_box: AboutWindow<'a>,
-    notifier: NotifierAPI,
+    notifier: Notifier,
     upscale: Upscale
 }
 
 impl<'a> Aeternum<'a> {
-    pub fn new(image: Option<Image>, theme: Theme, mut notifier: NotifierAPI, upscale: Upscale, config: Config) -> Self {
-        let about_box = AboutWindow::new(&config, &mut notifier);
+    pub fn new(image: Option<Image>, theme: Theme, notifier: Notifier, upscale: Upscale, config: Config) -> Self {
+        let about_box = AboutWindow::new(&config, &notifier);
 
         Self {
             image,
@@ -191,9 +193,13 @@ impl eframe::App for Aeternum<'_> {
                                             match files::save_folder() {
                                                 Ok(output) => self.upscale.options.output = Some(output),
                                                 Err(error) => {
-                                                    self.notifier.toasts.lock().unwrap()
-                                                        .toast_and_log(error.into(), ToastLevel::Error)
-                                                        .duration(Some(Duration::from_secs(5)));
+                                                    self.notifier.toast(
+                                                        error,
+                                                        ToastLevel::Error,
+                                                        |toast| {
+                                                            toast.duration(Some(Duration::from_secs(5)));
+                                                        }
+                                                    );
                                                 }
                                             }
                                         }
@@ -212,7 +218,7 @@ impl eframe::App for Aeternum<'_> {
                                         .on_hover_cursor(CursorIcon::PointingHand);
 
                                         if upscale_button_response.clicked() {
-                                            self.upscale.upscale(self.image.clone().unwrap(), &mut self.notifier);
+                                            self.upscale.upscale(self.image.clone().unwrap(), &self.notifier);
                                         }
                                     });
                                     ui.end_row();
@@ -278,8 +284,10 @@ impl eframe::App for Aeternum<'_> {
                                 match Image::from_path(path.clone()) {
                                     Ok(image) => self.image = Some(image),
                                     Err(error) => {
-                                        self.notifier.toasts.lock().unwrap().toast_and_log(
-                                            error.into(), ToastLevel::Error
+                                        self.notifier.toast(
+                                            error,
+                                            ToastLevel::Error,
+                                            |_| {}
                                         );
                                         return;
                                     }
@@ -341,9 +349,13 @@ impl eframe::App for Aeternum<'_> {
                                             ctx.forget_all_images();
                                         },
                                         Err(error) => {
-                                            self.notifier.toasts.lock().unwrap()
-                                                .toast_and_log(error.into(), ToastLevel::Error)
-                                                .duration(Some(Duration::from_secs(5)));
+                                            self.notifier.toast(
+                                                error,
+                                                ToastLevel::Error,
+                                                |toast| {
+                                                    toast.duration(Some(Duration::from_secs(5)));
+                                                }
+                                            );
                                         },
                                     }
                                 }
@@ -401,24 +413,22 @@ impl eframe::App for Aeternum<'_> {
                 Frame::NONE
                     .outer_margin(Margin {right: 12, bottom: 8, ..Default::default()})
             ).show(ctx, |ui| {
-                if let Ok(loading_status) = self.notifier.loading_status.try_read() {
-                    if let Some(loading) = loading_status.as_ref() {
-                        ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                            if let Some(message) = &loading.message {
-                                ui.label(message);
-                            }
+                if let Some(loading) = &self.notifier.loading {
+                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                        if let Some(message) = &loading.message {
+                            ui.label(message);
+                        }
 
-                            ui.add(
-                                egui::Spinner::new()
-                                    .color(
-                                        Color32::from_hex(
-                                            &self.theme.accent_colour.hex_code
-                                        ).unwrap()
-                                    )
-                                    .size(20.0)
-                            );
-                        });
-                    }
+                        ui.add(
+                            egui::Spinner::new()
+                                .color(
+                                    Color32::from_hex(
+                                        &self.theme.accent_colour.hex_code
+                                    ).unwrap()
+                                )
+                                .size(20.0)
+                        );
+                    });
                 }
             });
     }

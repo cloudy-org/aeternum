@@ -61,7 +61,7 @@ impl eframe::App for Aeternum<'_> {
 
                         let header_response = child_ui.horizontal_centered(|ui| {
                             let image = egui::Image::new(
-                                include_image!("../assets/sparkles_100x100.png")
+                                include_image!("../assets/crystal_100x100.png")
                             ).fit_to_exact_size([35.0, 35.0].into());
 
                             ui.add(image);
@@ -296,7 +296,7 @@ impl eframe::App for Aeternum<'_> {
                         });
 
                         ui.centered_and_justified(|ui| {
-                            const SIZE_OF_VERTICAL_CENTRED: f32 = 231.0; // WARNING: changing anything under "ui.vertical_centered"
+                            const SIZE_OF_VERTICAL_CENTRED: f32 = 251.0; // WARNING: changing anything under "ui.vertical_centered"
                             // will alter this size value so make sure you update it.
 
                             let file_is_hovering = !ctx.input(|i| i.raw.hovered_files.is_empty());
@@ -305,8 +305,8 @@ impl eframe::App for Aeternum<'_> {
 
                             let vertical_centred_response = ui.vertical_centered(|ui| {
                                 let image = egui::Image::new(
-                                    include_image!("../assets/sparkles_150x150.gif")
-                                ).max_width(130.0);
+                                    include_image!("../assets/crystal_150x150.gif")
+                                ).max_width(150.0);
 
                                 ui.add(image);
                                 ui.add_space(15.0);

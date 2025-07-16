@@ -1,7 +1,7 @@
 [package]
 name = "aeternum"
 edition = "2021"
-version = "0.1.2-beta.1"
+version = "0.1.2-beta.2"
 description = "A simple and minimal upscaler built in rust"
 authors = ["Ananas <ananas@ananas.moe>"]
 license = "GPL-3.0"
@@ -10,15 +10,16 @@ rust-version = "1.81"
 
 [dependencies]
 cirrus_egui = {path = "./cirrus/egui"}
+cirrus_error = {path = "./cirrus/error"}
 cirrus_theming = {path = "./cirrus/theming"}
 
 rfd = "0.15.1"
-egui = "0.31.1"
-eframe = { version = "0.31.1", features = ["default"] }
-egui_extras = { version = "0.31.1", features = ["all_loaders", "file"]}
+egui = "0.32.0"
+eframe = { version = "0.32.0", features = ["default"] }
+egui_extras = { version = "0.32.0", features = ["all_loaders", "file"]}
 log = "0.4.22"
 env_logger = "0.11.5"
-egui-notify = "0.19"
+egui-notify = { git = "https://github.com/THEGOLDENPRO/egui-notify-0.20.0.git"}
 serde_derive = "1.0.215"
 textwrap = "0.16.1"
 which = "7.0.1"

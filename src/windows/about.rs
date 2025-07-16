@@ -42,7 +42,7 @@ impl<'a> AboutWindow<'a> {
         };
 
         let about_widget = About::new(
-            include_image!("../../assets/sparkles.png"), about_app_info
+            include_image!("../../assets/crystal.png"), about_app_info
         );
 
         Self {
@@ -69,7 +69,7 @@ impl<'a> AboutWindow<'a> {
 
             let response = egui::Window::new(
                 egui::WidgetText::RichText(
-                    egui::RichText::new("ℹ About").size(15.0)
+                    egui::RichText::new("ℹ About").size(15.0).into()
                 )
             )
                 .default_size(default_window_size)

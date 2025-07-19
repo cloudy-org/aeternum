@@ -18,7 +18,7 @@ install-shortcut:
 ifeq ($(detected_os), Windows)
 	echo "Not implemented!"
 else
-	sudo cp ./assets/sparkles.png /usr/share/icons/aeternum.png
+	sudo cp ./assets/crystal.png /usr/share/icons/aeternum.png
 	sudo cp ./assets/aeternum.desktop /usr/share/applications/
 	sudo update-desktop-database /usr/share/applications/
 endif

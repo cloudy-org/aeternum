@@ -1,12 +1,12 @@
 use cirrus_egui::v1::{ui_utils::combo_box::{self}};
 use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, RichText, Slider, Vec2};
-use egui::{include_image, Button, OpenUrl, Sense, Stroke, UiBuilder};
+use egui::{include_image, Button, Key, Modifiers, OpenUrl, Sense, Stroke, UiBuilder};
 use egui_notify::ToastLevel;
 use strum::IntoEnumIterator;
 use std::time::Duration;
 
-use crate::{config::config::Config, error::Error, files, upscale::{OutputExt, Upscale}, windows::about::AboutWindow, Image};
+use crate::{config::config::Config, error::Error, files, upscale::{OutputExt, Upscale}, views::settings::SettingsView, windows::about::AboutWindow, Image};
 
 pub type Notifier = cirrus_egui::v1::notifier::Notifier<Error>;
 
@@ -14,20 +14,25 @@ pub struct Aeternum<'a> {
     theme: Theme,
     image: Option<Image>,
     about_box: AboutWindow<'a>,
+    settings_view: SettingsView,
     notifier: Notifier,
-    upscale: Upscale
+    upscale: Upscale,
+    show_settings: bool,
 }
 
 impl<'a> Aeternum<'a> {
     pub fn new(image: Option<Image>, theme: Theme, notifier: Notifier, upscale: Upscale, config: Config) -> Self {
         let about_box = AboutWindow::new(&config, &notifier);
+        let settings_view = SettingsView::new();
 
         Self {
             image,
             theme,
             notifier,
             about_box,
-            upscale
+            settings_view,
+            upscale,
+            show_settings: false
         }
     }
 }
@@ -35,11 +40,17 @@ impl<'a> Aeternum<'a> {
 impl eframe::App for Aeternum<'_> {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.about_box.handle_input(ctx);
+        self.settings_view.handle_input(ctx);
 
-        egui::CentralPanel::default().show(ctx, |_ui| {
+        egui::CentralPanel::default().show(ctx, |ui| {
             self.upscale.update();
             self.notifier.update(ctx);
             self.about_box.update(ctx);
+
+            if self.settings_view.show {
+                self.settings_view.show(ctx, ui, &self.theme);
+                return;
+            }
 
             let frame_margin = Margin {
                 left: 15,
@@ -399,7 +410,8 @@ impl eframe::App for Aeternum<'_> {
                             assert_eq!(
                                 vertical_centred_response.rect.height(),
                                 SIZE_OF_VERTICAL_CENTRED,
-                                "Some programmer did an idiot move..."
+                                "Some programmer did an idiot move \
+                                (size of 'ui.vertical_centered' needs to be set again)..."
                             );
                         });
                     },

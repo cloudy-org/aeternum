@@ -12,6 +12,7 @@ rust-version = "1.81"
 cirrus_egui = {path = "./cirrus/egui"}
 cirrus_error = {path = "./cirrus/error"}
 cirrus_theming = {path = "./cirrus/theming"}
+cirrus_config = {path = "./cirrus/config"}
 
 rfd = "0.15.1"
 egui = "0.32.0"

@@ -1,12 +1,13 @@
-use cirrus_egui::v1::{ui_utils::combo_box::{self}};
+use cirrus_config::config_key_path;
+use cirrus_egui::v1::{ui_utils::combo_box::{self}, widgets::settings::{section::{Section, SectionDisplayInfo}, Settings}};
 use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, RichText, Slider, Vec2};
-use egui::{include_image, Button, Key, Modifiers, OpenUrl, Sense, Stroke, UiBuilder};
+use egui::{include_image, Button, Key, OpenUrl, Sense, Stroke, UiBuilder};
 use egui_notify::ToastLevel;
 use strum::IntoEnumIterator;
-use std::time::Duration;
+use std::{time::Duration};
 
-use crate::{config::config::Config, error::Error, files, upscale::{OutputExt, Upscale}, views::settings::SettingsView, windows::about::AboutWindow, Image};
+use crate::{config::config::Config, error::Error, files, upscale::{OutputExt, Upscale}, windows::about::AboutWindow, Image};
 
 pub type Notifier = cirrus_egui::v1::notifier::Notifier<Error>;
 
@@ -14,41 +15,64 @@ pub struct Aeternum<'a> {
     theme: Theme,
     image: Option<Image>,
     about_box: AboutWindow<'a>,
-    settings_view: SettingsView,
     notifier: Notifier,
     upscale: Upscale,
+    config: Config,
+
+    config_template_string: &'static str,
     show_settings: bool,
 }
 
 impl<'a> Aeternum<'a> {
     pub fn new(image: Option<Image>, theme: Theme, notifier: Notifier, upscale: Upscale, config: Config) -> Self {
         let about_box = AboutWindow::new(&config, &notifier);
-        let settings_view = SettingsView::new();
+
+        let config_template_string = include_str!("../assets/config.template.toml");
 
         Self {
             image,
             theme,
             notifier,
             about_box,
-            settings_view,
             upscale,
+            config,
+
+            config_template_string,
             show_settings: false
         }
     }
 }
 
-impl eframe::App for Aeternum<'_> {
+impl<'a> eframe::App for Aeternum<'a> {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.about_box.handle_input(ctx);
-        self.settings_view.handle_input(ctx);
+
+        if ctx.input(|input| input.key_pressed(Key::Escape)) {
+            self.show_settings = false;
+        }
+
+        // TODO: make this keybind customizable via the 
+        // config in the future when we have good keybinds parsing.
+        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(Key::Comma)) {
+            self.show_settings = !self.show_settings;
+        }
 
         egui::CentralPanel::default().show(ctx, |ui| {
             self.upscale.update();
             self.notifier.update(ctx);
             self.about_box.update(ctx);
 
-            if self.settings_view.show {
-                self.settings_view.show(ctx, ui, &self.theme);
+            if self.show_settings {
+                Settings::new(&self.config_template_string)
+                    .add_section::<bool>(
+                        Section::new(
+                            config_key_path!(self.config.misc.enable_custom_folder),
+                            &mut self.config.misc.enable_custom_folder,
+                            SectionDisplayInfo::default()
+                        ).into()
+                    )
+                    .show(ctx, ui, &self.theme);
+
                 return;
             }
 

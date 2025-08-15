@@ -22,7 +22,6 @@ mod windows;
 mod files;
 mod upscale;
 mod config;
-mod views;
 
 #[derive(Parser, Debug)]
 #[clap(author = "Ananas")]

@@ -63,6 +63,7 @@ impl<'a> eframe::App for Aeternum<'a> {
             self.about_box.update(ctx);
 
             if self.show_settings {
+                // TODO: init once and turn `add_section` into an idempotent function.
                 Settings::new(&self.config_template_string)
                     .add_section::<bool>(
                         Section::new(

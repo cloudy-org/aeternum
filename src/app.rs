@@ -64,15 +64,14 @@ impl<'a> eframe::App for Aeternum<'a> {
 
             if self.show_settings {
                 // TODO: init once and turn `add_section` into an idempotent function.
-                Settings::new(&self.config_template_string)
+                Settings::new(&self.config_template_string, &ui)
                     .add_section::<bool>(
                         Section::new(
                             config_key_path!(self.config.misc.enable_custom_folder),
                             &mut self.config.misc.enable_custom_folder,
                             SectionDisplayInfo::default()
                         ).into()
-                    )
-                    .show(ctx, ui, &self.theme);
+                    ).show_ui(ui, &self.theme);
 
                 return;
             }

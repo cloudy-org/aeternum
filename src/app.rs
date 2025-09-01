@@ -1,4 +1,4 @@
-use cirrus_config::config_key_path;
+use cirrus_config::{config_key_path, v1::manager::ConfigManager};
 use cirrus_egui::v1::{ui_utils::combo_box::{self}, widgets::settings::{section::{Section, SectionDisplayInfo}, Settings}};
 use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, RichText, Slider, Vec2};
@@ -7,7 +7,7 @@ use egui_notify::ToastLevel;
 use strum::IntoEnumIterator;
 use std::{time::Duration};
 
-use crate::{config::config::Config, error::Error, files, upscale::{OutputExt, Upscale}, windows::about::AboutWindow, Image};
+use crate::{config::config::Config, error::Error, files, upscale::{OutputExt, Upscale}, windows::about::AboutWindow, Image, TEMPLATE_CONFIG_TOML_STRING};
 
 pub type Notifier = cirrus_egui::v1::notifier::Notifier<Error>;
 
@@ -17,17 +17,14 @@ pub struct Aeternum<'a> {
     about_box: AboutWindow<'a>,
     notifier: Notifier,
     upscale: Upscale,
-    config: Config,
+    config_manager: ConfigManager<Config>,
 
-    config_template_string: &'static str,
     show_settings: bool,
 }
 
 impl<'a> Aeternum<'a> {
-    pub fn new(image: Option<Image>, theme: Theme, notifier: Notifier, upscale: Upscale, config: Config) -> Self {
-        let about_box = AboutWindow::new(&config, &notifier);
-
-        let config_template_string = include_str!("../assets/config.template.toml");
+    pub fn new(image: Option<Image>, theme: Theme, notifier: Notifier, upscale: Upscale, config_manager: ConfigManager<Config>) -> Self {
+        let about_box = AboutWindow::new(&config_manager.config, &notifier);
 
         Self {
             image,
@@ -35,9 +32,8 @@ impl<'a> Aeternum<'a> {
             notifier,
             about_box,
             upscale,
-            config,
+            config_manager,
 
-            config_template_string,
             show_settings: false
         }
     }
@@ -63,12 +59,13 @@ impl<'a> eframe::App for Aeternum<'a> {
             self.about_box.update(ctx);
 
             if self.show_settings {
-                // TODO: init once and turn `add_section` into an idempotent function.
-                Settings::new(&self.config_template_string, &ui)
+                let config = &mut self.config_manager.config;
+
+                Settings::new(TEMPLATE_CONFIG_TOML_STRING, &ui)
                     .add_section::<bool>(
                         Section::new(
-                            config_key_path!(self.config.misc.enable_custom_folder),
-                            &mut self.config.misc.enable_custom_folder,
+                            config_key_path!(config.misc.enable_custom_folder),
+                            &mut config.misc.enable_custom_folder,
                             SectionDisplayInfo::default()
                         ).into()
                     ).show_ui(ui, &self.theme);

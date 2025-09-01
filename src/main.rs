@@ -1,8 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use std::{env, path::PathBuf, time::Duration};
+use std::{env, fs, path::PathBuf, time::Duration};
 
 use app::Aeternum;
+use cirrus_config::v1::manager::ConfigManager;
+use cirrus_path::v1::{get_user_config_dir_path};
 use image::Image;
 use log::debug;
 use eframe::egui::{self, Style};
@@ -22,6 +24,9 @@ mod windows;
 mod files;
 mod upscale;
 mod config;
+
+static APP_NAME: &str = "aeternum";
+static TEMPLATE_CONFIG_TOML_STRING: &str = include_str!("../assets/config.template.toml");
 
 #[derive(Parser, Debug)]
 #[clap(author = "Ananas")]
@@ -121,22 +126,52 @@ fn main() -> eframe::Result {
         None
     );
 
-    let config = match Config::new() {
+    let config_manager: ConfigManager<Config> = match ConfigManager::new(APP_NAME, TEMPLATE_CONFIG_TOML_STRING) {
         Ok(config) => config,
         Err(error) => {
             notifier.toast(
-                format!(
-                    "Error occurred getting aeternum's config file! \
-                    Defaulting to default config. Error: {}", error.to_string().as_str()
-                ), 
+                format!("Failed to initialize config! Error: {}", error.human_message()), 
                 ToastLevel::Error,
                 |toast| {
                     toast.duration(Some(Duration::from_secs(10)));
                 }
             );
 
-            Config::default()
+            ConfigManager::default()
         }
+    };
+
+    match get_user_config_dir_path(APP_NAME) {
+        Ok(config_dir_path) => {
+            let models_folder = config_dir_path.join("models");
+
+            if !models_folder.exists() {
+                debug!("Creating models directory for aeternum...");
+
+                match fs::create_dir_all(&models_folder) {
+                    Ok(_) => debug!("Models directory created!"),
+                    Err(error) => {
+                        notifier.toast(
+                            format!(
+                                "Failed to create models directory! Error: {}", error
+                            ), 
+                            ToastLevel::Error,
+                            |_| {}
+                        );
+                    },
+                }
+            }
+        },
+        Err(error) => {
+            notifier.toast(
+                format!(
+                    "Failed to create models directory because we \
+                    failed to get the user's config path! Error: {}", error.human_message()
+                ),
+                ToastLevel::Error,
+                |_| {}
+            );
+        },
     };
 
     let mut upscale = match Upscale::new() {
@@ -152,7 +187,7 @@ fn main() -> eframe::Result {
         }
     };
 
-    match upscale.init(config.misc.enable_custom_folder) {
+    match upscale.init(config_manager.config.misc.enable_custom_folder) {
         Ok(_) => {},
         Err(error) => {
             notifier.toast(
@@ -181,7 +216,7 @@ fn main() -> eframe::Result {
 
             Ok(
                 Box::new(
-                    Aeternum::new(image, theme, notifier, upscale, config)
+                    Aeternum::new(image, theme, notifier, upscale, config_manager)
                 )
             )
         }),

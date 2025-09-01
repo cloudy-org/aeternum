@@ -13,6 +13,7 @@ cirrus_egui = {path = "./cirrus/egui"}
 cirrus_error = {path = "./cirrus/error"}
 cirrus_theming = {path = "./cirrus/theming"}
 cirrus_config = {path = "./cirrus/config"}
+cirrus_path = {path = "./cirrus/path"}
 
 rfd = "0.15.1"
 egui = "0.32.0"

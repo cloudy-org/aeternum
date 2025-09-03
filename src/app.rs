@@ -1,5 +1,5 @@
-use cirrus_config::{config_key_path, v1::manager::ConfigManager};
-use cirrus_egui::v1::{ui_utils::combo_box::{self}, widgets::settings::{section::{Section, SectionDisplayInfo}, Settings}};
+use cirrus_config::{config_key_path};
+use cirrus_egui::v1::{config_manager::ConfigManager, ui_utils::combo_box::{self}, widgets::settings::{section::{Section, SectionDisplayInfo}, Settings}};
 use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, RichText, Slider, Vec2};
 use egui::{include_image, Button, Key, OpenUrl, Sense, Stroke, UiBuilder};

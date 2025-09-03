@@ -3,14 +3,13 @@
 use std::{env, fs, path::PathBuf, time::Duration};
 
 use app::Aeternum;
-use cirrus_config::v1::manager::ConfigManager;
 use cirrus_path::v1::{get_user_config_dir_path};
 use image::Image;
 use log::debug;
 use eframe::egui::{self, Style};
 use egui_notify::ToastLevel;
 use cirrus_theming::v1::Theme;
-use cirrus_egui::v1::{notifier::Notifier, styling::Styling};
+use cirrus_egui::v1::{config_manager::ConfigManager, notifier::Notifier, styling::Styling};
 use clap::{arg, command, Parser};
 use error::Error;
 

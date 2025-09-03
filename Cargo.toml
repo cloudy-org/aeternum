@@ -21,7 +21,7 @@ eframe = { version = "0.32.0", features = ["default"] }
 egui_extras = { version = "0.32.0", features = ["all_loaders", "file"]}
 log = "0.4.22"
 env_logger = "0.11.5"
-egui-notify = { git = "https://github.com/THEGOLDENPRO/egui-notify-0.20.0.git"}
+egui-notify = "0.20"
 serde_derive = "1.0.215"
 textwrap = "0.16.1"
 which = "7.0.1"

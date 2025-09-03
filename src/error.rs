@@ -1,7 +1,6 @@
 use std::{fmt::{self, Display, Formatter}, path::PathBuf};
 
 use cirrus_error::v1::error::CError;
-use cirrus_egui::v1::error::EguiCError;
 
 type AE = Option<String>;
 
@@ -17,8 +16,6 @@ pub enum Error {
     ImageFormatNotSupported(AE, String),
     FailedToGetCurrentExecutablePath(AE)
 }
-
-impl EguiCError for Error {}
 
 impl CError for Error {
     fn human_message(&self) -> String {

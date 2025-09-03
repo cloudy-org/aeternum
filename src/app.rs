@@ -226,7 +226,7 @@ impl<'a> eframe::App for Aeternum<'a> {
                                                 Ok(output) => self.upscale.options.output = Some(output),
                                                 Err(error) => {
                                                     self.notifier.toast(
-                                                        error,
+                                                        Box::new(error),
                                                         ToastLevel::Error,
                                                         |toast| {
                                                             toast.duration(Some(Duration::from_secs(5)));
@@ -317,7 +317,7 @@ impl<'a> eframe::App for Aeternum<'a> {
                                     Ok(image) => self.image = Some(image),
                                     Err(error) => {
                                         self.notifier.toast(
-                                            error,
+                                            Box::new(error),
                                             ToastLevel::Error,
                                             |_| {}
                                         );
@@ -382,7 +382,7 @@ impl<'a> eframe::App for Aeternum<'a> {
                                         },
                                         Err(error) => {
                                             self.notifier.toast(
-                                                error,
+                                                Box::new(error),
                                                 ToastLevel::Error,
                                                 |toast| {
                                                     toast.duration(Some(Duration::from_secs(5)));

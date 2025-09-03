@@ -76,7 +76,7 @@ fn main() -> eframe::Result {
                 );
 
                 notifier.toast(
-                    error,
+                    Box::new(error),
                     ToastLevel::Error,
                     |toast| {
                         toast.duration(Some(Duration::from_secs(10)));
@@ -89,7 +89,7 @@ fn main() -> eframe::Result {
                     Ok(image) => Some(image),
                     Err(error) => {
                         notifier.toast(
-                            error,
+                            Box::new(error),
                             ToastLevel::Error,
                             |_| {}
                         );
@@ -177,7 +177,7 @@ fn main() -> eframe::Result {
         Ok(upscale) => upscale,
         Err(error) => {
             notifier.toast(
-                error.clone(),
+                Box::new(error.clone()),
                 ToastLevel::Error,
                 |_| {}
             );
@@ -190,7 +190,7 @@ fn main() -> eframe::Result {
         Ok(_) => {},
         Err(error) => {
             notifier.toast(
-                error.clone(),
+                Box::new(error.clone()),
                 ToastLevel::Error,
                 |_| {}
             );

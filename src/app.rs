@@ -1,5 +1,5 @@
 use cirrus_config::{config_key_path};
-use cirrus_egui::v1::{config_manager::ConfigManager, ui_utils::combo_box::{self}, widgets::settings::{section::{Section, SectionDisplayInfo}, Settings}};
+use cirrus_egui::v1::{config_manager::ConfigManager, ui_utils::combo_box::{self}, widgets::settings::{section::{Section, SectionDisplayInfo, SectionOverrides}, Settings}};
 use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, RichText, Slider, Vec2};
 use egui::{include_image, Button, Key, OpenUrl, Sense, Stroke, UiBuilder};
@@ -59,15 +59,18 @@ impl<'a> eframe::App for Aeternum<'a> {
             self.about_box.update(ctx);
 
             if self.show_settings {
+                self.config_manager.update(ctx);
+
                 let config = &mut self.config_manager.config;
 
                 Settings::new(TEMPLATE_CONFIG_TOML_STRING, &ui)
-                    .add_section::<bool>(
+                    .add_section(
                         Section::new(
                             config_key_path!(config.misc.enable_custom_folder),
                             &mut config.misc.enable_custom_folder,
+                            SectionOverrides::default(),
                             SectionDisplayInfo::default()
-                        ).into()
+                        )
                     ).show_ui(ui, &self.theme);
 
                 return;

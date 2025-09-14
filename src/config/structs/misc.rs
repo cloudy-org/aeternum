@@ -6,11 +6,10 @@ pub struct Misc {
     pub enable_custom_folder: bool
 }
 
-
 impl Default for Misc {
     fn default() -> Self {
         Self {
-            enable_custom_folder: true
+            enable_custom_folder: enable_default()
         }
     }
 }

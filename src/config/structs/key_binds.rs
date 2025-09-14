@@ -9,7 +9,7 @@ pub struct KeyBinds {
 impl Default for KeyBinds {
     fn default() -> Self {
         Self {
-            about_box: "A".to_string()
+            about_box: about_box_default()
         }
     }
 }

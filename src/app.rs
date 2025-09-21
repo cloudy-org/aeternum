@@ -59,7 +59,9 @@ impl<'a> eframe::App for Aeternum<'a> {
             self.about_box.update(ctx);
 
             if self.show_settings {
-                self.config_manager.update(ctx);
+                // we only want to run the config manager's 
+                // update loop when were are in the settings menu
+                self.config_manager.update(ctx, &mut self.notifier);
 
                 let config = &mut self.config_manager.config;
 

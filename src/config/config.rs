@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::structs::{key_binds::KeyBinds, misc::Misc};
 
-#[derive(Debug, Deserialize, Serialize, Default, Clone)]
+#[derive(Debug, Deserialize, Serialize, Default, Clone, Hash)]
 pub struct Config {
     #[serde(default = "version_default")]
     pub version: i8,

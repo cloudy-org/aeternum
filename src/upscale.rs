@@ -1,9 +1,10 @@
 use std::{io::{BufRead, BufReader}, path::PathBuf, process::Stdio, sync::{Arc, Mutex}, thread, time::{Duration, Instant}};
+use cirrus_egui::v1::notifier::Notifier;
 use egui_notify::ToastLevel;
 use std::process::Command;
 use strum_macros::{EnumIter, Display};
 
-use crate::{app::Notifier, error::Error, image::Image};
+use crate::{error::Error, image::Image};
 
 #[derive(Clone, PartialEq, EnumIter, Display)]
 pub enum OutputExt {

@@ -46,7 +46,7 @@ fn main() -> eframe::Result {
 
     env_logger::init();
 
-    let notifier: Notifier<Error> = Notifier::new();
+    let notifier = Notifier::new();
 
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()

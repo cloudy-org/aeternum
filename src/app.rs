@@ -1,5 +1,5 @@
 use cirrus_config::{config_key_path};
-use cirrus_egui::v1::{config_manager::ConfigManager, ui_utils::combo_box::{self}, widgets::settings::{section::{Section, SectionDisplayInfo, SectionOverrides}, Settings}};
+use cirrus_egui::v1::{config_manager::ConfigManager, notifier::Notifier, ui_utils::combo_box::{self}, widgets::settings::{section::{Section, SectionDisplayInfo, SectionOverrides}, Settings}};
 use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, RichText, Slider, Vec2};
 use egui::{include_image, Button, Key, OpenUrl, Sense, Stroke, UiBuilder};
@@ -7,9 +7,7 @@ use egui_notify::ToastLevel;
 use strum::IntoEnumIterator;
 use std::{time::Duration};
 
-use crate::{config::config::Config, error::Error, files, upscale::{OutputExt, Upscale}, windows::about::AboutWindow, Image, TEMPLATE_CONFIG_TOML_STRING};
-
-pub type Notifier = cirrus_egui::v1::notifier::Notifier<Error>;
+use crate::{config::config::Config, files, upscale::{OutputExt, Upscale}, windows::about::AboutWindow, Image, TEMPLATE_CONFIG_TOML_STRING};
 
 pub struct Aeternum<'a> {
     theme: Theme,
@@ -98,7 +96,7 @@ impl<'a> eframe::App for Aeternum<'a> {
 
                         let header_response = child_ui.horizontal_centered(|ui| {
                             let image = egui::Image::new(
-                                include_image!("../assets/crystal_100x100.png")
+                                include_image!("../assets/crystal_80x80.png")
                             ).fit_to_exact_size([35.0, 35.0].into());
 
                             ui.add(image);

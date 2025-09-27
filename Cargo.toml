@@ -12,6 +12,8 @@ rust-version = "1.81"
 cirrus_egui = {path = "./cirrus/egui"}
 cirrus_error = {path = "./cirrus/error"}
 cirrus_theming = {path = "./cirrus/theming"}
+cirrus_config = {path = "./cirrus/config"}
+cirrus_path = {path = "./cirrus/path"}
 
 rfd = "0.15.1"
 egui = "0.32.0"
@@ -19,7 +21,7 @@ eframe = { version = "0.32.0", features = ["default"] }
 egui_extras = { version = "0.32.0", features = ["all_loaders", "file"]}
 log = "0.4.22"
 env_logger = "0.11.5"
-egui-notify = { git = "https://github.com/THEGOLDENPRO/egui-notify-0.20.0.git"}
+egui-notify = "0.20"
 serde_derive = "1.0.215"
 textwrap = "0.16.1"
 which = "7.0.1"

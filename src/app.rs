@@ -1,45 +1,79 @@
-use cirrus_egui::v1::{ui_utils::combo_box::{self}};
+use cirrus_config::{config_key_path};
+use cirrus_egui::v1::{config_manager::ConfigManager, notifier::Notifier, ui_utils::combo_box::{self}, widgets::settings::{section::{Section, SectionDisplayInfo, SectionOverrides}, Settings}};
 use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, RichText, Slider, Vec2};
 use egui::{include_image, Button, OpenUrl, Sense, Stroke, UiBuilder};
 use egui_notify::ToastLevel;
 use strum::IntoEnumIterator;
-use std::time::Duration;
+use std::{time::Duration};
 
-use crate::{config::config::Config, error::Error, files, upscale::{OutputExt, Upscale}, windows::about::AboutWindow, Image};
-
-pub type Notifier = cirrus_egui::v1::notifier::Notifier<Error>;
+use crate::{config::config::Config, files, upscale::{OutputExt, Upscale}, windows::about::AboutWindow, Image, TEMPLATE_CONFIG_TOML_STRING};
 
 pub struct Aeternum<'a> {
     theme: Theme,
     image: Option<Image>,
     about_box: AboutWindow<'a>,
     notifier: Notifier,
-    upscale: Upscale
+    upscale: Upscale,
+    config_manager: ConfigManager<Config>,
+
+    show_settings: bool,
 }
 
 impl<'a> Aeternum<'a> {
-    pub fn new(image: Option<Image>, theme: Theme, notifier: Notifier, upscale: Upscale, config: Config) -> Self {
-        let about_box = AboutWindow::new(&config, &notifier);
+    pub fn new(image: Option<Image>, theme: Theme, notifier: Notifier, upscale: Upscale, config_manager: ConfigManager<Config>) -> Self {
+        let about_box = AboutWindow::new(&config_manager.config, &notifier);
 
         Self {
             image,
             theme,
             notifier,
             about_box,
-            upscale
+            upscale,
+            config_manager,
+
+            show_settings: false
         }
     }
 }
 
-impl eframe::App for Aeternum<'_> {
+impl<'a> eframe::App for Aeternum<'a> {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.about_box.handle_input(ctx);
 
-        egui::CentralPanel::default().show(ctx, |_ui| {
+        // handles the settings panel closing and opening 
+        // key binds inputs for us as well as saving on exit.
+        Settings::handle_input(
+            ctx,
+            &mut self.config_manager,
+            &mut self.notifier,
+            &mut self.show_settings
+        );
+
+        egui::CentralPanel::default().show(ctx, |ui| {
             self.upscale.update();
             self.notifier.update(ctx);
             self.about_box.update(ctx);
+
+            if self.show_settings {
+                // we only want to run the config manager's 
+                // update loop when were are in the settings menu
+                self.config_manager.update(ctx, &mut self.notifier);
+
+                let config = &mut self.config_manager.config;
+
+                Settings::new(TEMPLATE_CONFIG_TOML_STRING, &ui)
+                    .add_section(
+                        Section::new(
+                            config_key_path!(config.misc.enable_custom_folder),
+                            &mut config.misc.enable_custom_folder,
+                            SectionOverrides::default(),
+                            SectionDisplayInfo::default()
+                        )
+                    ).show_ui(ui, &self.theme);
+
+                return;
+            }
 
             let frame_margin = Margin {
                 left: 15,
@@ -61,7 +95,7 @@ impl eframe::App for Aeternum<'_> {
 
                         let header_response = child_ui.horizontal_centered(|ui| {
                             let image = egui::Image::new(
-                                include_image!("../assets/crystal_100x100.png")
+                                include_image!("../assets/crystal_80x80.png")
                             ).fit_to_exact_size([35.0, 35.0].into());
 
                             ui.add(image);
@@ -194,7 +228,7 @@ impl eframe::App for Aeternum<'_> {
                                                 Ok(output) => self.upscale.options.output = Some(output),
                                                 Err(error) => {
                                                     self.notifier.toast(
-                                                        error,
+                                                        Box::new(error),
                                                         ToastLevel::Error,
                                                         |toast| {
                                                             toast.duration(Some(Duration::from_secs(5)));
@@ -285,7 +319,7 @@ impl eframe::App for Aeternum<'_> {
                                     Ok(image) => self.image = Some(image),
                                     Err(error) => {
                                         self.notifier.toast(
-                                            error,
+                                            Box::new(error),
                                             ToastLevel::Error,
                                             |_| {}
                                         );
@@ -350,7 +384,7 @@ impl eframe::App for Aeternum<'_> {
                                         },
                                         Err(error) => {
                                             self.notifier.toast(
-                                                error,
+                                                Box::new(error),
                                                 ToastLevel::Error,
                                                 |toast| {
                                                     toast.duration(Some(Duration::from_secs(5)));
@@ -399,7 +433,8 @@ impl eframe::App for Aeternum<'_> {
                             assert_eq!(
                                 vertical_centred_response.rect.height(),
                                 SIZE_OF_VERTICAL_CENTRED,
-                                "Some programmer did an idiot move..."
+                                "Some programmer did an idiot move \
+                                (size of 'ui.vertical_centered' needs to be set again)..."
                             );
                         });
                     },

@@ -1,9 +1,9 @@
-use cirrus_egui::v1::widgets::about::{authors_toml_to_about_authors, About, AboutApplicationInfo};
+use cirrus_egui::v1::{notifier::Notifier, widgets::about::{authors_toml_to_about_authors, About, AboutApplicationInfo}};
 use eframe::egui::{self, Key, Response, Vec2};
 use egui::include_image;
 use egui_notify::ToastLevel;
 
-use crate::{app::Notifier, config::config::Config};
+use crate::{config::config::Config};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHORS: &str = include_str!("../../authors.toml");

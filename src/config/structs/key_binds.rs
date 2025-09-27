@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Hash)]
 pub struct KeyBinds {
     #[serde(default = "about_box_default")]
     pub about_box: String,
@@ -9,7 +9,7 @@ pub struct KeyBinds {
 impl Default for KeyBinds {
     fn default() -> Self {
         Self {
-            about_box: "A".to_string()
+            about_box: about_box_default()
         }
     }
 }

@@ -1,9 +1,10 @@
 use std::{io::{BufRead, BufReader}, path::PathBuf, process::Stdio, sync::{Arc, Mutex}, thread, time::{Duration, Instant}};
+use cirrus_egui::v1::notifier::Notifier;
 use egui_notify::ToastLevel;
 use std::process::Command;
 use strum_macros::{EnumIter, Display};
 
-use crate::{app::Notifier, error::Error, image::Image};
+use crate::{error::Error, image::Image};
 
 #[derive(Clone, PartialEq, EnumIter, Display)]
 pub enum OutputExt {
@@ -247,7 +248,7 @@ impl Upscale {
                                     "Process returned as not successful.".to_string()
                                 );
                                 notifier_arc.toast(
-                                    error,
+                                    Box::new(error),
                                     ToastLevel::Error,
                                     |toast| {
                                         toast.duration(Some(Duration::from_secs(10)));
@@ -262,7 +263,7 @@ impl Upscale {
                             );
 
                             notifier_arc.toast(
-                                error,
+                                Box::new(error),
                                 ToastLevel::Error,
                                 |toast| {
                                     toast.duration(Some(Duration::from_secs(10)));
@@ -275,7 +276,7 @@ impl Upscale {
                     let error = Error::FailedToUpscaleImage(Some(error.to_string()), "Failed to spawn child process.".to_string());
 
                     notifier_arc.toast(
-                        error,
+                        Box::new(error),
                         ToastLevel::Error,
                         |toast| {
                             toast.duration(Some(Duration::from_secs(10)));

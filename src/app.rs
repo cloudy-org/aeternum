@@ -2,7 +2,7 @@ use cirrus_config::{config_key_path};
 use cirrus_egui::v1::{config_manager::ConfigManager, notifier::Notifier, ui_utils::combo_box::{self}, widgets::settings::{section::{Section, SectionDisplayInfo, SectionOverrides}, Settings}};
 use cirrus_theming::v1::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, RichText, Slider, Vec2};
-use egui::{include_image, Button, Key, OpenUrl, Sense, Stroke, UiBuilder};
+use egui::{include_image, Button, OpenUrl, Sense, Stroke, UiBuilder};
 use egui_notify::ToastLevel;
 use strum::IntoEnumIterator;
 use std::{time::Duration};
@@ -41,15 +41,14 @@ impl<'a> eframe::App for Aeternum<'a> {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.about_box.handle_input(ctx);
 
-        if ctx.input(|input| input.key_pressed(Key::Escape)) {
-            self.show_settings = false;
-        }
-
-        // TODO: make this keybind customizable via the 
-        // config in the future when we have good keybinds parsing.
-        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(Key::Comma)) {
-            self.show_settings = !self.show_settings;
-        }
+        // handles the settings panel closing and opening 
+        // key binds inputs for us as well as saving on exit.
+        Settings::handle_input(
+            ctx,
+            &mut self.config_manager,
+            &mut self.notifier,
+            &mut self.show_settings
+        );
 
         egui::CentralPanel::default().show(ctx, |ui| {
             self.upscale.update();

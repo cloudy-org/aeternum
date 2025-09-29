@@ -33,10 +33,6 @@ static TEMPLATE_CONFIG_TOML_STRING: &str = include_str!("../assets/config.templa
 struct Args {
     /// Valid path to image.
     image: Option<String>,
-
-    /// Valid themes at the moment: dark, light
-    #[arg(short, long)]
-    theme: Option<String>,
 }
 
 fn main() -> eframe::Result {
@@ -58,7 +54,6 @@ fn main() -> eframe::Result {
     let cli_args = Args::parse();
 
     let image_path = cli_args.image;
-    let theme_string = cli_args.theme;
 
     if image_path.is_some() {
         debug!("Using image: '{}'", &image_path.as_ref().unwrap());
@@ -102,27 +97,7 @@ fn main() -> eframe::Result {
         None => None
     };
 
-    // TODO: implement "CTK_THEME" env variable in cirrus.
-    // let is_dark = match theme_string {
-    //     Some(string) => {
-    //         if string == "light" {
-    //             false
-    //         } else if string == "dark" {
-    //             true
-    //         } else {
-    //             log::warn!(
-    //                 "'{}' is not a valid theme. Pass either 'dark' or 'light'.", string
-    //             );
-
-    //             true
-    //         }
-    //     },
-    //     _ => true
-    // };
-
-    let theme = Theme::new(
-        None
-    );
+    let theme = Theme::new(None);
 
     let config_manager: ConfigManager<Config> = match ConfigManager::new(APP_NAME, TEMPLATE_CONFIG_TOML_STRING) {
         Ok(config) => config,

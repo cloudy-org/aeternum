@@ -1,6 +1,6 @@
 use cirrus_config::{config_key_path};
 use cirrus_egui::v1::{config_manager::ConfigManager, notifier::Notifier, ui_utils::combo_box::{self}, widgets::settings::{section::{Section, SectionDisplayInfo, SectionOverrides}, Settings}};
-use cirrus_theming::v1::Theme;
+use cirrus_theming::v1::theme::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, RichText, Slider, Vec2};
 use egui::{include_image, Button, OpenUrl, Sense, Stroke, UiBuilder};
 use egui_notify::ToastLevel;
@@ -420,7 +420,7 @@ impl<'a> eframe::App for Aeternum<'a> {
                                             Stroke {
                                                 width: 2.0,
                                                 color: Color32::from_hex(
-                                                    &self.theme.accent_colour.hex_code
+                                                    &self.theme.pallet.accent.as_hex_string()
                                                 ).unwrap()
                                             },
                                             11.0,
@@ -458,7 +458,7 @@ impl<'a> eframe::App for Aeternum<'a> {
                             egui::Spinner::new()
                                 .color(
                                     Color32::from_hex(
-                                        &self.theme.accent_colour.hex_code
+                                        &self.theme.pallet.accent.as_hex_string()
                                     ).unwrap()
                                 )
                                 .size(20.0)

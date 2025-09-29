@@ -4,11 +4,11 @@ use std::{env, fs, path::PathBuf, time::Duration};
 
 use app::Aeternum;
 use cirrus_path::v1::{get_user_config_dir_path};
+use cirrus_theming::v1::theme::Theme;
 use image::Image;
 use log::debug;
-use eframe::egui::{self, Style};
+use eframe::egui::{self};
 use egui_notify::ToastLevel;
-use cirrus_theming::v1::Theme;
 use cirrus_egui::v1::{config_manager::ConfigManager, notifier::Notifier, styling::Styling};
 use clap::{arg, command, Parser};
 use error::Error;
@@ -102,26 +102,25 @@ fn main() -> eframe::Result {
         None => None
     };
 
-    let is_dark = match theme_string {
-        Some(string) => {
-            if string == "light" {
-                false
-            } else if string == "dark" {
-                true
-            } else {
-                log::warn!(
-                    "'{}' is not a valid theme. Pass either 'dark' or 'light'.", string
-                );
+    // TODO: implement "CTK_THEME" env variable in cirrus.
+    // let is_dark = match theme_string {
+    //     Some(string) => {
+    //         if string == "light" {
+    //             false
+    //         } else if string == "dark" {
+    //             true
+    //         } else {
+    //             log::warn!(
+    //                 "'{}' is not a valid theme. Pass either 'dark' or 'light'.", string
+    //             );
 
-                true
-            }
-        },
-        _ => true
-    };
+    //             true
+    //         }
+    //     },
+    //     _ => true
+    // };
 
     let theme = Theme::new(
-        is_dark,
-        vec![],
         None
     );
 
@@ -205,13 +204,13 @@ fn main() -> eframe::Result {
         Box::new(|cc| {
             egui_extras::install_image_loaders(&cc.egui_ctx);
 
-            let mut custom_style = Style {..Default::default()};
-
-            custom_style.spacing.slider_width = 180.0;
-
-            Styling::new(&theme, Some(custom_style))
+            Styling::new(&theme)
                 .set_all()
                 .apply(&cc.egui_ctx);
+
+            cc.egui_ctx.style_mut(|style| {
+                style.spacing.slider_width = 180.0;
+            });
 
             Ok(
                 Box::new(

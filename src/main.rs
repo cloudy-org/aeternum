@@ -1,16 +1,17 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use std::{env, fs, path::PathBuf, time::Duration};
+use std::{fs, path::PathBuf, time::Duration};
 
 use app::Aeternum;
-use cirrus_path::v1::{get_user_config_dir_path};
+use cirrus_path::v1::get_user_config_cloudy_folder_path;
 use cirrus_theming::v1::theme::Theme;
+use env_logger::Env;
 use image::Image;
 use log::debug;
 use eframe::egui::{self};
 use egui_notify::ToastLevel;
 use cirrus_egui::v1::{config_manager::ConfigManager, notifier::Notifier, styling::Styling};
-use clap::{arg, command, Parser};
+use clap::{command, Parser};
 use error::Error;
 
 use config::config::Config;
@@ -36,11 +37,10 @@ struct Args {
 }
 
 fn main() -> eframe::Result {
-    if !env::var("RUST_LOG").is_ok() {
-        env::set_var("RUST_LOG", "WARN");
-    }
+    let logger_env = Env::default()
+        .filter_or("RUST_LOG", "warn");
 
-    env_logger::init();
+    env_logger::init_from_env(logger_env);
 
     let notifier = Notifier::new();
 
@@ -114,9 +114,9 @@ fn main() -> eframe::Result {
         }
     };
 
-    match get_user_config_dir_path(APP_NAME) {
+    match get_user_config_cloudy_folder_path() {
         Ok(config_dir_path) => {
-            let models_folder = config_dir_path.join("models");
+            let models_folder = config_dir_path.join(APP_NAME).join("models");
 
             if !models_folder.exists() {
                 debug!("Creating models directory for aeternum...");

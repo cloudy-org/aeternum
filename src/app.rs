@@ -2,7 +2,7 @@ use cirrus_config::{config_key_path};
 use cirrus_egui::v1::{config_manager::ConfigManager, notifier::Notifier, ui_utils::combo_box::{self}, widgets::settings::{section::{Section, SectionDisplayInfo, SectionOverrides}, Settings}};
 use cirrus_theming::v1::theme::Theme;
 use eframe::egui::{self, Align, Color32, Context, CursorIcon, Frame, Layout, Margin, RichText, Slider, Vec2};
-use egui::{Button, OpenUrl, Sense, Stroke, UiBuilder, include_image, style::HandleShape};
+use egui::{Button, OpenUrl, Sense, Stroke, UiBuilder, include_image};
 use egui_notify::ToastLevel;
 use strum::IntoEnumIterator;
 use std::{time::Duration};
@@ -160,10 +160,9 @@ impl<'a> eframe::App for Aeternum<'a> {
 
                                         ui.label(RichText::new("Scale").size(20.0).strong());
                                         ui.label(RichText::new("The image resolution to upscale to.").size(10.0));
-                                        ui.add(
-                                            Slider::new(&mut self.upscale.options.scale, 1..=16)
-                                                .handle_shape(HandleShape::Circle) // new egui update changed handle
-                                        ).on_hover_text(detailed_hint).on_disabled_hover_text(detailed_hint);
+                                        ui.add(Slider::new(&mut self.upscale.options.scale, 1..=16))
+                                            .on_hover_text(detailed_hint)
+                                            .on_disabled_hover_text(detailed_hint);
 
                                         let scale = self.upscale.options.scale;
 
@@ -180,10 +179,7 @@ impl<'a> eframe::App for Aeternum<'a> {
 
                                     ui.vertical_centered_justified(|ui| {
                                         ui.label(RichText::new("Compression").size(20.0).strong());
-                                        ui.add(
-                                            Slider::new(&mut self.upscale.options.compression, 0..=100)
-                                                .handle_shape(HandleShape::Circle)
-                                        );
+                                        ui.add(Slider::new(&mut self.upscale.options.compression, 0..=100));
                                     });
                                     ui.end_row();
 

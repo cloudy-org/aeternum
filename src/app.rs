@@ -418,7 +418,7 @@ impl<'a> eframe::App for Aeternum<'a> {
                                             Stroke {
                                                 width: 2.0,
                                                 color: Color32::from_hex(
-                                                    &self.theme.pallet.accent.as_hex_string()
+                                                    &self.theme.pallet.accent.to_hex_string()
                                                 ).unwrap()
                                             },
                                             11.0,
@@ -456,7 +456,7 @@ impl<'a> eframe::App for Aeternum<'a> {
                             egui::Spinner::new()
                                 .color(
                                     Color32::from_hex(
-                                        &self.theme.pallet.accent.as_hex_string()
+                                        &self.theme.pallet.accent.to_hex_string()
                                     ).unwrap()
                                 )
                                 .size(20.0)

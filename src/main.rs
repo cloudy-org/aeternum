@@ -1,16 +1,17 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use std::{env, fs, path::PathBuf, time::Duration};
+use std::{fs, path::PathBuf, time::Duration};
 
 use app::Aeternum;
-use cirrus_path::v1::{get_user_config_dir_path};
+use cirrus_path::v1::get_user_config_cloudy_folder_path;
+use cirrus_theming::v1::theme::Theme;
+use env_logger::Env;
 use image::Image;
 use log::debug;
-use eframe::egui::{self, Style};
+use eframe::egui::{self};
 use egui_notify::ToastLevel;
-use cirrus_theming::v1::Theme;
 use cirrus_egui::v1::{config_manager::ConfigManager, notifier::Notifier, styling::Styling};
-use clap::{arg, command, Parser};
+use clap::{command, Parser};
 use error::Error;
 
 use config::config::Config;
@@ -33,18 +34,13 @@ static TEMPLATE_CONFIG_TOML_STRING: &str = include_str!("../assets/config.templa
 struct Args {
     /// Valid path to image.
     image: Option<String>,
-
-    /// Valid themes at the moment: dark, light
-    #[arg(short, long)]
-    theme: Option<String>,
 }
 
 fn main() -> eframe::Result {
-    if !env::var("RUST_LOG").is_ok() {
-        env::set_var("RUST_LOG", "WARN");
-    }
+    let logger_env = Env::default()
+        .filter_or("RUST_LOG", "warn");
 
-    env_logger::init();
+    env_logger::init_from_env(logger_env);
 
     let notifier = Notifier::new();
 
@@ -58,7 +54,6 @@ fn main() -> eframe::Result {
     let cli_args = Args::parse();
 
     let image_path = cli_args.image;
-    let theme_string = cli_args.theme;
 
     if image_path.is_some() {
         debug!("Using image: '{}'", &image_path.as_ref().unwrap());
@@ -102,28 +97,7 @@ fn main() -> eframe::Result {
         None => None
     };
 
-    let is_dark = match theme_string {
-        Some(string) => {
-            if string == "light" {
-                false
-            } else if string == "dark" {
-                true
-            } else {
-                log::warn!(
-                    "'{}' is not a valid theme. Pass either 'dark' or 'light'.", string
-                );
-
-                true
-            }
-        },
-        _ => true
-    };
-
-    let theme = Theme::new(
-        is_dark,
-        vec![],
-        None
-    );
+    let theme = Theme::new(None);
 
     let config_manager: ConfigManager<Config> = match ConfigManager::new(APP_NAME, TEMPLATE_CONFIG_TOML_STRING) {
         Ok(config) => config,
@@ -140,9 +114,9 @@ fn main() -> eframe::Result {
         }
     };
 
-    match get_user_config_dir_path(APP_NAME) {
+    match get_user_config_cloudy_folder_path() {
         Ok(config_dir_path) => {
-            let models_folder = config_dir_path.join("models");
+            let models_folder = config_dir_path.join(APP_NAME).join("models");
 
             if !models_folder.exists() {
                 debug!("Creating models directory for aeternum...");
@@ -205,13 +179,13 @@ fn main() -> eframe::Result {
         Box::new(|cc| {
             egui_extras::install_image_loaders(&cc.egui_ctx);
 
-            let mut custom_style = Style {..Default::default()};
-
-            custom_style.spacing.slider_width = 180.0;
-
-            Styling::new(&theme, Some(custom_style))
+            Styling::new(&theme)
                 .set_all()
                 .apply(&cc.egui_ctx);
+
+            cc.egui_ctx.style_mut(|style| {
+                style.spacing.slider_width = 180.0;
+            });
 
             Ok(
                 Box::new(
